@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -21,8 +22,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { login, isLoading } = useAuth();
 
   const {
     register,
@@ -33,15 +34,12 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
     setError(null);
-    
-    // Authentication service is under development
-    // In production, this would call the backend API
-    setTimeout(() => {
-      setIsLoading(false);
-      setError("Authentication service is under development. Please check back later.");
-    }, 1000);
+    try {
+      await login(data);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Login failed. Please check your credentials.");
+    }
   };
 
   return (

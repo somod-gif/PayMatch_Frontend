@@ -148,3 +148,50 @@ export type BadgeVariant =
   | "error"
   | "info"
   | "neutral";
+
+// --- Auth Types ---
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type UserRole = "admin" | "user" | "viewer";
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  company?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  tokens: AuthTokens;
+}
+
+export interface AuthContextValue {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  logout: () => void;
+  refreshUser: () => Promise<void>;
+}

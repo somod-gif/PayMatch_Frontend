@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
+import { useAuth } from "@/contexts/AuthContext";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -26,8 +27,8 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { register: registerUser, isLoading } = useAuth();
 
   const {
     register,
@@ -37,15 +38,17 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async () => {
-    setIsLoading(true);
+  const onSubmit = async (data: RegisterFormValues) => {
     setError(null);
-    
-    // Authentication service is under development
-    setTimeout(() => {
-      setIsLoading(false);
-      setError("Authentication service is under development. Please check back later.");
-    }, 1000);
+    try {
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Registration failed. Please try again.");
+    }
   };
 
   return (
