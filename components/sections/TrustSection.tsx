@@ -73,7 +73,7 @@ export function TrustSection() {
               Powered by Nomba APIs
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              Seamless integration with Nomba's robust payment infrastructure
+              Seamless integration with Nomba payment infrastructure
             </p>
           </motion.div>
 
