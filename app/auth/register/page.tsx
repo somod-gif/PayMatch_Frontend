@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/Toast";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -29,6 +30,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const { register: registerUser, isLoading } = useAuth();
+  const { addToast } = useToast();
 
   const {
     register,
@@ -46,9 +48,20 @@ export default function RegisterPage() {
         email: data.email,
         password: data.password,
       });
+      addToast({
+        type: "success",
+        title: "Account created!",
+        message: "Welcome to PayMatch. You are now logged in.",
+      });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error?.response?.data?.error || "Registration failed. Please try again.");
+      const errorMessage = error?.response?.data?.error || "Registration failed. Please try again.";
+      setError(errorMessage);
+      addToast({
+        type: "error",
+        title: "Registration failed",
+        message: errorMessage,
+      });
     }
   };
 

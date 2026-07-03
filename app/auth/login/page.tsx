@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/Toast";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -24,6 +25,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const { login, isLoading } = useAuth();
+  const { addToast } = useToast();
 
   const {
     register,
@@ -37,9 +39,20 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(data);
+      addToast({
+        type: "success",
+        title: "Welcome back!",
+        message: "You have been successfully logged in.",
+      });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error?.response?.data?.error || "Login failed. Please check your credentials.");
+      const errorMessage = error?.response?.data?.error || "Login failed. Please check your credentials.";
+      setError(errorMessage);
+      addToast({
+        type: "error",
+        title: "Login failed",
+        message: errorMessage,
+      });
     }
   };
 
