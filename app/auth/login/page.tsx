@@ -37,8 +37,9 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(data);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || "Login failed. Please check your credentials.");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error?.response?.data?.error || "Login failed. Please check your credentials.");
     }
   };
 
