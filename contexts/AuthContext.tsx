@@ -2,12 +2,11 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { User, AuthContextValue, LoginPayload, RegisterPayload, AuthResponse } from "@/types";
+import { User, AuthContextValue, LoginPayload, RegisterPayload } from "@/types";
 import { apiClient } from "@/lib/api";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const TOKEN_KEY = "paymatch_auth_token";
 const USER_KEY = "paymatch_user";
 
 // Helper to set cookie
@@ -25,20 +24,20 @@ function removeCookie(name: string) {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   // Initialize auth state from localStorage
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedUser = localStorage.getItem(USER_KEY);
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setCookie(TOKEN_KEY, storedToken);
+    if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser) as User;
+        setUser(parsedUser);
+        setUserId(parsedUser.id);
+        setCookie("x-user-id", parsedUser.id);
       } catch {
         localStorage.removeItem(USER_KEY);
       }
@@ -46,11 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // Set up axios interceptor for token
+  // Set up axios interceptor for x-user-id header
   useEffect(() => {
     const requestInterceptor = apiClient.interceptors.request.use((config) => {
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (userId) {
+        config.headers["x-user-id"] = userId;
       }
       return config;
     });
@@ -58,21 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       apiClient.interceptors.request.eject(requestInterceptor);
     };
-  }, [token]);
+  }, [userId]);
 
   const login = useCallback(async (payload: LoginPayload) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post<AuthResponse>("/auth/login", payload);
+      const response = await apiClient.post<{ success: boolean; message: string; data: User }>("/api/v1/auth/login", payload);
       
       if (response.data) {
-        const { user, tokens } = response.data;
-        setUser(user);
-        setToken(tokens.accessToken);
+        const userData = response.data.data;
+        setUser(userData);
+        setUserId(userData.id);
         
-        localStorage.setItem(TOKEN_KEY, tokens.accessToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        setCookie(TOKEN_KEY, tokens.accessToken);
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+        setCookie("x-user-id", userData.id);
         
         router.push("/dashboard");
       }
@@ -86,16 +84,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(async (payload: RegisterPayload) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post<AuthResponse>("/auth/register", payload);
+      const response = await apiClient.post<{ success: boolean; message: string; data: User }>("/api/v1/auth/register", payload);
       
       if (response.data) {
-        const { user, tokens } = response.data;
-        setUser(user);
-        setToken(tokens.accessToken);
+        const userData = response.data.data;
+        setUser(userData);
+        setUserId(userData.id);
         
-        localStorage.setItem(TOKEN_KEY, tokens.accessToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        setCookie(TOKEN_KEY, tokens.accessToken);
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+        setCookie("x-user-id", userData.id);
         
         router.push("/dashboard");
       }
@@ -108,32 +105,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem(TOKEN_KEY);
+    setUserId(null);
     localStorage.removeItem(USER_KEY);
-    removeCookie(TOKEN_KEY);
+    removeCookie("x-user-id");
     router.push("/");
   }, [router]);
 
   const refreshUser = useCallback(async () => {
-    if (!token) return;
+    if (!userId) return;
     
     try {
-      const response = await apiClient.get<User>("/auth/me");
+      const response = await apiClient.get<{ success: boolean; data: User }>("/api/v1/auth/me");
       if (response.data) {
-        setUser(response.data);
-        localStorage.setItem(USER_KEY, JSON.stringify(response.data));
+        setUser(response.data.data);
+        localStorage.setItem(USER_KEY, JSON.stringify(response.data.data));
       }
     } catch (error) {
       console.error("Failed to refresh user:", error);
       logout();
     }
-  }, [token, logout]);
+  }, [userId, logout]);
 
   const value: AuthContextValue = {
     user,
-    token,
-    isAuthenticated: !!user && !!token,
+    userId,
+    isAuthenticated: !!user && !!userId,
     isLoading,
     login,
     register,
