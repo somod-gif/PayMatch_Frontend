@@ -13,23 +13,23 @@ const protectedRoutes = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-// Check if the route is protected
+  // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Get the token from cookies
-  const token = request.cookies.get("auth_token")?.value;
+  // Get the x-user-id from cookies
+  const userId = request.cookies.get("x-user-id")?.value;
 
-  // If accessing a protected route without a token, redirect to login
-  if (isProtectedRoute && !token) {
+  // If accessing a protected route without a userId, redirect to login
+  if (isProtectedRoute && !userId) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If accessing auth routes with a token, redirect to dashboard
-  if (pathname.startsWith("/auth") && token) {
+  // If accessing auth routes with a userId, redirect to dashboard
+  if (pathname.startsWith("/auth") && userId) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

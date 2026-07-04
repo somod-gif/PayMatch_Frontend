@@ -8,16 +8,47 @@ import { LoadingSkeleton, TableRowSkeleton } from "@/components/ui/LoadingSkelet
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { invoicesService } from "@/services";
-import { Invoice } from "@/types";
-import { FileText, Search, Plus, Calendar, User } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { invoicesService, customersService, virtualAccountsService } from "@/services";
+import { Invoice, CreateInvoicePayload, Customer } from "@/types";
+import { FileText, Search, Plus, Calendar, User, CreditCard } from "lucide-react";
 import { CURRENCY, INVOICE_STATUS_LABELS } from "@/constants";
+import { useToast } from "@/components/ui/Toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const createInvoiceSchema = z.object({
+  customerId: z.string().min(1, "Please select a customer"),
+  invoiceNumber: z.string().min(1, "Invoice number is required"),
+  expectedAmount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Amount must be greater than 0",
+  }),
+  description: z.string().min(1, "Description is required"),
+  dueDate: z.string().min(1, "Due date is required"),
+});
+
+type CreateInvoiceFormValues = z.infer<typeof createInvoiceSchema>;
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [generatingVA, setGeneratingVA] = useState(false);
+  const { addToast } = useToast();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateInvoiceFormValues>({
+    resolver: zodResolver(createInvoiceSchema),
+  });
 
   const fetchInvoices = async () => {
     setLoading(true);
@@ -27,7 +58,7 @@ export default function InvoicesPage() {
       if (response.success) {
         setInvoices(response.data);
       } else {
-        setError(response.error || "Failed to load invoices");
+        setError(response.message || "Failed to load invoices");
       }
     } catch {
       setError("Unable to connect to the backend. Please check your connection.");
@@ -36,28 +67,39 @@ export default function InvoicesPage() {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await customersService.list();
+      if (response.success) {
+        setCustomers(response.data);
+      }
+    } catch {
+      // Silently fail - customers may not be loaded yet
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
+    fetchCustomers();
   }, []);
 
   const filteredInvoices = invoices.filter(
     (i) =>
       i.description.toLowerCase().includes(search.toLowerCase()) ||
-      i.customerName.toLowerCase().includes(search.toLowerCase())
+      i.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
+      (i.customer?.fullName && i.customer.fullName.toLowerCase().includes(search.toLowerCase()))
   );
 
   const getBadgeVariant = (status: string): "success" | "warning" | "error" | "info" | "default" => {
     switch (status) {
       case "paid":
         return "success";
-      case "sent":
+      case "pending":
         return "info";
       case "partial":
         return "warning";
       case "overdue":
         return "error";
-      case "draft":
-        return "default";
       case "cancelled":
         return "error";
       default:
@@ -65,12 +107,80 @@ export default function InvoicesPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string | number) => {
+    const numAmount = typeof amount === "string" ? Number(amount) : amount;
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: CURRENCY.code,
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(numAmount);
+  };
+
+  const onCreateInvoice = async (data: CreateInvoiceFormValues) => {
+    setCreating(true);
+    try {
+      const payload: CreateInvoicePayload = {
+        customerId: data.customerId,
+        invoiceNumber: data.invoiceNumber,
+        expectedAmount: Number(data.expectedAmount),
+        description: data.description,
+        dueDate: new Date(data.dueDate).toISOString(),
+      };
+      const response = await invoicesService.create(payload);
+      if (response.success) {
+        addToast({
+          type: "success",
+          title: "Invoice created",
+          message: `Invoice ${data.invoiceNumber} has been created.`,
+        });
+        setShowCreateModal(false);
+        reset();
+        fetchInvoices();
+      } else {
+        addToast({
+          type: "error",
+          title: "Failed to create invoice",
+          message: response.message || "An error occurred.",
+        });
+      }
+    } catch {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: "Unable to create invoice. Please try again.",
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleGenerateVirtualAccount = async (invoice: Invoice) => {
+    setGeneratingVA(true);
+    try {
+      const response = await virtualAccountsService.create({ invoiceId: invoice.id });
+      if (response.success) {
+        addToast({
+          type: "success",
+          title: "Virtual account generated",
+          message: `Account: ${response.data.nombaAccountNumber} (${response.data.bankName})`,
+        });
+        fetchInvoices();
+      } else {
+        addToast({
+          type: "error",
+          title: "Failed to generate virtual account",
+          message: response.message || "An error occurred.",
+        });
+      }
+    } catch {
+      addToast({
+        type: "error",
+        title: "Error",
+        message: "Unable to generate virtual account. Please try again.",
+      });
+    } finally {
+      setGeneratingVA(false);
+    }
   };
 
   return (
@@ -85,7 +195,7 @@ export default function InvoicesPage() {
             Track and manage all your invoices
           </p>
         </div>
-        <Button icon={<Plus size={18} />}>
+        <Button icon={<Plus size={18} />} onClick={() => setShowCreateModal(true)}>
           Create Invoice
         </Button>
       </div>
@@ -133,6 +243,7 @@ export default function InvoicesPage() {
                 : "Create your first invoice to get started"
             }
             actionLabel={search ? undefined : "Create Invoice"}
+            onAction={() => setShowCreateModal(true)}
           />
         ) : (
           <Table>
@@ -141,6 +252,7 @@ export default function InvoicesPage() {
               <TableCell header>Customer</TableCell>
               <TableCell header>Amount</TableCell>
               <TableCell header>Due Date</TableCell>
+              <TableCell header>Virtual Account</TableCell>
               <TableCell header>Status</TableCell>
             </TableHeader>
             <TableBody>
@@ -152,26 +264,21 @@ export default function InvoicesPage() {
                         {invoice.description}
                       </p>
                       <p className="text-xs text-slate-500 font-mono">
-                        #{invoice.id.slice(0, 8)}
+                        #{invoice.invoiceNumber}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <User size={14} className="text-slate-400" />
-                      {invoice.customerName}
+                      {invoice.customer?.fullName || "N/A"}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-semibold text-slate-900">
-                        {formatCurrency(invoice.amount)}
+                        {formatCurrency(invoice.expectedAmount)}
                       </p>
-                      {invoice.amountOutstanding > 0 && (
-                        <p className="text-xs text-slate-500">
-                          {formatCurrency(invoice.amountOutstanding)} outstanding
-                        </p>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -181,8 +288,30 @@ export default function InvoicesPage() {
                     </div>
                   </TableCell>
                   <TableCell>
+                    {invoice.virtualAccount ? (
+                      <div>
+                        <p className="font-mono text-sm">
+                          {invoice.virtualAccount.nombaAccountNumber}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {invoice.virtualAccount.bankName}
+                        </p>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon={<CreditCard size={14} />}
+                        onClick={() => handleGenerateVirtualAccount(invoice)}
+                        disabled={generatingVA}
+                      >
+                        Generate VA
+                      </Button>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={getBadgeVariant(invoice.status)}>
-                      {INVOICE_STATUS_LABELS[invoice.status]}
+                      {INVOICE_STATUS_LABELS[invoice.status] || invoice.status}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -191,6 +320,83 @@ export default function InvoicesPage() {
           </Table>
         )}
       </Card>
+
+      {/* Create Invoice Modal */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          reset();
+        }}
+        title="Create New Invoice"
+      >
+        <form onSubmit={handleSubmit(onCreateInvoice)} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Customer
+            </label>
+            <select
+              {...register("customerId")}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-transparent"
+            >
+              <option value="">Select a customer</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.fullName} ({c.email})
+                </option>
+              ))}
+            </select>
+            {errors.customerId && (
+              <p className="text-sm text-red-600 mt-1">{errors.customerId.message}</p>
+            )}
+          </div>
+
+          <Input
+            label="Invoice Number"
+            placeholder="INV-001"
+            error={errors.invoiceNumber?.message}
+            {...register("invoiceNumber")}
+          />
+
+          <Input
+            label="Amount (NGN)"
+            type="number"
+            placeholder="50000"
+            error={errors.expectedAmount?.message}
+            {...register("expectedAmount")}
+          />
+
+          <Input
+            label="Description"
+            placeholder="Payment for services"
+            error={errors.description?.message}
+            {...register("description")}
+          />
+
+          <Input
+            label="Due Date"
+            type="date"
+            error={errors.dueDate?.message}
+            {...register("dueDate")}
+          />
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowCreateModal(false);
+                reset();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={creating}>
+              {creating ? "Creating..." : "Create Invoice"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

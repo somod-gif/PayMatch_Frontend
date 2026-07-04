@@ -4,7 +4,7 @@
 
 export const env = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
   apiTimeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 30000,
   isDevelopment: process.env.NODE_ENV === "development",
   isProduction: process.env.NODE_ENV === "production",

@@ -16,10 +16,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  businessName: z.string().min(2, "Business name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
+  phone: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -44,9 +45,10 @@ export default function RegisterPage() {
     setError(null);
     try {
       await registerUser({
-        name: data.name,
+        businessName: data.businessName,
         email: data.email,
         password: data.password,
+        phone: data.phone || undefined,
       });
       addToast({
         type: "success",
@@ -54,8 +56,8 @@ export default function RegisterPage() {
         message: "Welcome to PayMatch. You are now logged in.",
       });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      const errorMessage = error?.response?.data?.error || "Registration failed. Please try again.";
+      const error = err as { response?: { data?: { message?: string } } };
+      const errorMessage = error?.response?.data?.message || "Registration failed. Please try again.";
       setError(errorMessage);
       addToast({
         type: "error",
@@ -104,12 +106,12 @@ export default function RegisterPage() {
               )}
 
               <Input
-                label="Full name"
+                label="Business name"
                 type="text"
-                placeholder="John Doe"
-                error={errors.name?.message}
+                placeholder="Acme Business Ltd"
+                error={errors.businessName?.message}
                 disabled={isLoading}
-                {...register("name")}
+                {...register("businessName")}
               />
 
               <Input
@@ -119,6 +121,15 @@ export default function RegisterPage() {
                 error={errors.email?.message}
                 disabled={isLoading}
                 {...register("email")}
+              />
+
+              <Input
+                label="Phone (optional)"
+                type="tel"
+                placeholder="+2348012345678"
+                error={errors.phone?.message}
+                disabled={isLoading}
+                {...register("phone")}
               />
 
               <Input

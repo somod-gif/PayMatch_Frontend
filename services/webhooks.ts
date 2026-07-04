@@ -3,14 +3,14 @@
 // ============================================================
 
 import { get } from "@/lib/api";
-import type { WebhookPayload, ApiResponse, PaginatedResponse } from "@/types";
+import type { WebhookLog, ApiResponse } from "@/types";
 
-const BASE = "/webhooks";
+const BASE = "/api/v1/webhooks";
 
 export const webhooksService = {
   list: (params?: { page?: number; limit?: number }) =>
-    get<PaginatedResponse<WebhookPayload>>(BASE, { params }),
+    get<ApiResponse<WebhookLog[]>>(BASE, { params }),
 
   getById: (id: string) =>
-    get<ApiResponse<WebhookPayload>>(`${BASE}/${id}`),
+    get<ApiResponse<WebhookLog>>(`${BASE}/${id}`),
 };

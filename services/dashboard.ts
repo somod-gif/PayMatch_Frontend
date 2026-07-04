@@ -5,9 +5,9 @@
 import { get } from "@/lib/api";
 import type { DashboardStats, ApiResponse } from "@/types";
 
-const BASE = "/dashboard";
+const BASE = "/api/v1/dashboard";
 
 export const dashboardService = {
   getStats: () =>
-    get<ApiResponse<DashboardStats>>(`${BASE}/stats`),
+    get<ApiResponse<DashboardStats>>(`${BASE}/summary`),
 };

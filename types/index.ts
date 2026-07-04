@@ -1,20 +1,58 @@
 // ============================================================
-// PayMatch - Shared Type Definitions
+// PayMatch - Shared Type Definitions (Backend API v1)
 // ============================================================
+
+// --- Auth Types ---
+export interface User {
+  id: string;
+  email: string;
+  businessName: string;
+  phone?: string;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  businessName: string;
+  phone?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  data: User;
+}
+
+export interface AuthContextValue {
+  user: User | null;
+  userId: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  logout: () => void;
+  refreshUser: () => Promise<void>;
+}
 
 // --- Customer Types ---
 export interface Customer {
   id: string;
-  name: string;
+  businessOwnerId: string;
+  fullName: string;
   email: string;
   phone?: string;
-  company?: string;
-  virtualAccountNumber?: string;
-  virtualAccountBank?: string;
-  totalInvoices: number;
-  totalPaid: number;
-  totalOutstanding: number;
-  status: CustomerStatus;
+  customerReference: string;
+  status: "active" | "inactive" | "archived";
+  invoices?: Invoice[];
+  payments?: Payment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -22,42 +60,55 @@ export interface Customer {
 export type CustomerStatus = "active" | "inactive" | "archived";
 
 export interface CreateCustomerPayload {
-  name: string;
+  fullName: string;
   email: string;
   phone?: string;
-  company?: string;
+  customerReference?: string;
 }
 
 // --- Invoice Types ---
 export interface Invoice {
   id: string;
+  invoiceNumber: string;
   customerId: string;
-  customerName: string;
-  amount: number;
-  amountPaid: number;
-  amountOutstanding: number;
+  customer: Customer;
+  businessOwnerId: string;
+  expectedAmount: string;
+  currency: string;
+  status: "pending" | "paid" | "partial" | "overdue" | "cancelled";
   description: string;
   dueDate: string;
-  status: InvoiceStatus;
-  virtualAccountNumber?: string;
-  virtualAccountBank?: string;
+  payments?: Payment[];
+  virtualAccount?: VirtualAccount;
   createdAt: string;
   updatedAt: string;
 }
 
-export type InvoiceStatus =
-  | "draft"
-  | "sent"
-  | "partial"
-  | "paid"
-  | "overdue"
-  | "cancelled";
+export type InvoiceStatus = "pending" | "paid" | "partial" | "overdue" | "cancelled";
 
 export interface CreateInvoicePayload {
   customerId: string;
-  amount: number;
+  invoiceNumber: string;
+  expectedAmount: number;
   description: string;
   dueDate: string;
+}
+
+// --- Virtual Account Types ---
+export interface VirtualAccount {
+  id: string;
+  invoiceId: string;
+  nombaAccountNumber: string;
+  accountName: string;
+  bankName: string;
+  accountReference: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVirtualAccountPayload {
+  invoiceId: string;
 }
 
 // --- Payment Types ---
@@ -65,57 +116,95 @@ export interface Payment {
   id: string;
   invoiceId: string;
   customerId: string;
-  customerName: string;
+  merchantTxRef: string;
+  amount: string;
+  currency: string;
+  paymentMethod: string;
+  status: "pending" | "completed" | "failed" | "refunded";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
+
+export interface CreatePaymentPayload {
+  invoiceId: string;
+  customerId: string;
+  merchantTxRef: string;
   amount: number;
-  reference: string;
-  source: PaymentSource;
-  status: PaymentStatus;
-  matchedAt?: string;
+  currency: string;
+  paymentMethod: string;
+}
+
+export interface PaymentLinkResponse {
+  success: boolean;
+  invoiceNumber: string;
+  paymentUrl: string;
+}
+
+export interface PaymentShareResponse {
+  success: boolean;
+  customer: string;
+  email: string;
+  phone?: string;
+  amount: string;
+  currency: string;
+  bank: string;
+  accountNumber: string;
+  accountName: string;
+  paymentLink: string;
+  whatsappMessage: string;
+  whatsappUrl: string;
+  emailSubject: string;
+  emailBody: string;
+  copyText: string;
+}
+
+// --- Dashboard Types ---
+export interface DashboardMetrics {
+  totalCustomers: number;
+  totalInvoices: number;
+  paidInvoices: number;
+  pendingInvoices: number;
+  partialPayments: number;
+  totalRevenue: string;
+}
+
+export interface RecentPayment {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  amount: string;
+  paymentMethod: string;
+  status: string;
   createdAt: string;
 }
 
-export type PaymentSource = "bank_transfer" | "webhook" | "manual";
-export type PaymentStatus =
-  | "pending"
-  | "matched"
-  | "unmatched"
-  | "failed"
-  | "refunded";
-
-// --- Dashboard Types ---
 export interface DashboardStats {
-  totalCustomers: number;
-  activeInvoices: number;
-  paymentsReceived: number;
-  totalRevenue: number;
-  pendingAmount: number;
-  matchRate: number;
-  recentTransactions: RecentTransaction[];
-}
-
-export interface RecentTransaction {
-  id: string;
-  customerName: string;
-  description: string;
-  amount: number;
-  status: PaymentStatus;
-  date: string;
-}
-
-// --- Webhook Types ---
-export interface WebhookPayload {
-  event: WebhookEvent;
-  data: Record<string, unknown>;
+  metrics: DashboardMetrics;
+  recentPayments: RecentPayment[];
   timestamp: string;
 }
 
-export type WebhookEvent =
-  | "payment.received"
-  | "payment.matched"
-  | "payment.failed"
-  | "customer.created"
-  | "invoice.created"
-  | "invoice.updated";
+// --- Webhook Types ---
+export interface WebhookEvent {
+  event: string;
+  requestId: string;
+  data: {
+    reference: string;
+    amount: string;
+    invoiceNumber: string;
+  };
+}
+
+export interface WebhookLog {
+  id: string;
+  event: string;
+  requestId: string;
+  payload: WebhookEvent;
+  processed: boolean;
+  createdAt: string;
+}
 
 // --- API Types ---
 export interface ApiResponse<T> {
@@ -134,8 +223,10 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 
 export interface ApiError {
   success: false;
+  message: string;
   error: string;
-  statusCode: number;
+  timestamp: string;
+  path: string;
 }
 
 // --- UI Types ---
@@ -148,50 +239,3 @@ export type BadgeVariant =
   | "error"
   | "info"
   | "neutral";
-
-// --- Auth Types ---
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  company?: string;
-  role: UserRole;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type UserRole = "admin" | "user" | "viewer";
-
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-}
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface RegisterPayload {
-  name: string;
-  email: string;
-  password: string;
-  company?: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  tokens: AuthTokens;
-}
-
-export interface AuthContextValue {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => void;
-  refreshUser: () => Promise<void>;
-}

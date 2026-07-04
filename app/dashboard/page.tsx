@@ -55,7 +55,7 @@ export default function DashboardPage() {
       if (response.success) {
         setStats(response.data);
       } else {
-        setError(response.error || "Failed to load dashboard stats");
+        setError(response.message || "Failed to load dashboard stats");
       }
     } catch {
       setError("Unable to connect to the backend. Please check your connection.");
@@ -68,39 +68,40 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string | number) => {
+    const numAmount = typeof amount === "string" ? Number(amount) : amount;
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
       currency: CURRENCY.code,
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const statItems = [
     {
       label: "Total Customers",
-      value: stats?.totalCustomers ?? 0,
+      value: stats?.metrics?.totalCustomers ?? 0,
       icon: Users,
       color: "from-teal-500 to-teal-600",
       bgColor: "bg-teal-50",
     },
     {
       label: "Active Invoices",
-      value: stats?.activeInvoices ?? 0,
+      value: stats?.metrics?.totalInvoices ?? 0,
       icon: FileText,
       color: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-50",
     },
     {
-      label: "Payments Received",
-      value: stats ? formatCurrency(stats.paymentsReceived) : "₦0",
+      label: "Total Revenue",
+      value: stats?.metrics?.totalRevenue ? formatCurrency(stats.metrics.totalRevenue) : "₦0",
       icon: DollarSign,
       color: "from-green-500 to-emerald-500",
       bgColor: "bg-green-50",
     },
     {
-      label: "Match Rate",
-      value: stats ? `${stats.matchRate}%` : "0%",
+      label: "Paid Invoices",
+      value: stats?.metrics?.paidInvoices ?? 0,
       icon: TrendingUp,
       color: "from-purple-500 to-pink-500",
       bgColor: "bg-purple-50",
@@ -115,7 +116,7 @@ export default function DashboardPage() {
           Welcome to PayMatch
         </h1>
         <p className="text-slate-500 mt-1">
-          Your payment reconciliation dashboard. Connect your backend to start receiving live data.
+          Your payment reconciliation dashboard powered by Nomba Virtual Accounts.
         </p>
       </div>
 
@@ -152,26 +153,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Activity */}
-      {stats && stats.recentTransactions.length > 0 && (
+      {stats && stats.recentPayments && stats.recentPayments.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Payments</h2>
           <Card>
             <div className="space-y-4">
-              {stats.recentTransactions.slice(0, 5).map((transaction) => (
+              {stats.recentPayments.slice(0, 5).map((payment) => (
                 <div
-                  key={transaction.id}
+                  key={payment.id}
                   className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0"
                 >
                   <div>
-                    <p className="font-medium text-slate-900">{transaction.customerName}</p>
-                    <p className="text-sm text-slate-600">{transaction.description}</p>
+                    <p className="font-medium text-slate-900">{payment.customerName}</p>
+                    <p className="text-sm text-slate-600">Invoice #{payment.invoiceNumber}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-slate-900">
-                      {formatCurrency(transaction.amount)}
+                      {formatCurrency(payment.amount)}
                     </p>
-                    <Badge variant={transaction.status === "matched" ? "success" : "warning"}>
-                      {transaction.status}
+                    <Badge variant={payment.status === "completed" ? "success" : "default"}>
+                      {payment.status}
                     </Badge>
                   </div>
                 </div>
@@ -210,18 +211,6 @@ export default function DashboardPage() {
             </a>
           ))}
         </div>
-      </div>
-
-      {/* Backend Notice */}
-      <div className="bg-gradient-to-br from-teal-50 to-slate-50 border border-teal-200 rounded-xl p-6">
-        <h3 className="font-semibold text-slate-900 mb-2">
-          🚀 Ready to go live?
-        </h3>
-        <p className="text-sm text-slate-600">
-          This dashboard displays placeholder data. Once your NestJS backend is deployed and
-          connected via the <code className="text-teal-700 bg-teal-100 px-1 rounded">NEXT_PUBLIC_API_URL</code> environment variable,
-          real customer, invoice, and payment data will populate automatically.
-        </p>
       </div>
     </div>
   );
