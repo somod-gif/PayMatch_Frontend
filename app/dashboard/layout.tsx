@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, Bell, LogOut } from "lucide-react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function DashboardLayout({
   children,

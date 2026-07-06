@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
-import { ArrowRight } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 export function SolutionSection() {
   const steps = [
@@ -10,36 +11,37 @@ export function SolutionSection() {
       number: 1,
       title: "Create Customer",
       description: "Set up customer profile in PayMatch",
+      details: ["Add customer details", "Set up preferences", "Ready to invoice"],
     },
     {
       number: 2,
       title: "Generate Invoice",
       description: "Create invoice with payment details",
+      details: ["Set amount and due date", "Add description", "Generate invoice"],
     },
     {
       number: 3,
       title: "Assign Virtual Account",
       description: "Link unique Nomba virtual account",
+      details: ["Auto-generate VA", "Share with customer", "Track payments"],
     },
     {
       number: 4,
       title: "Customer Pays",
       description: "Customer transfers to virtual account",
+      details: ["Customer makes payment", "Funds received", "Instant notification"],
     },
     {
       number: 5,
-      title: "Nomba sends Webhook",
-      description: "Real-time payment notification",
+      title: "Auto-Match Payment",
+      description: "PayMatch matches to correct invoice",
+      details: ["AI-powered matching", "Verify transaction", "Update status"],
     },
     {
       number: 6,
-      title: "Auto Match Payment",
-      description: "PayMatch matches to correct invoice",
-    },
-    {
-      number: 7,
       title: "Dashboard Updates",
       description: "Instant visibility into payment status",
+      details: ["Real-time updates", "Send reminders", "Generate reports"],
     },
   ];
 
@@ -68,6 +70,7 @@ export function SolutionSection() {
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-40 right-0 w-80 h-80 bg-teal-50 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl"></div>
       </div>
 
       <Container>
@@ -83,11 +86,17 @@ export function SolutionSection() {
             variants={itemVariants}
             className="text-center space-y-4 max-w-2xl mx-auto"
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 border border-teal-200 rounded-full mb-2">
+              <CheckCircle2 size={16} className="text-teal-700" />
+              <span className="text-sm font-medium text-teal-700">
+                The Solution
+              </span>
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900">
-              The Solution
+              Automated payment reconciliation in 6 simple steps
             </h2>
             <p className="text-lg text-slate-600">
-              Automated payment reconciliation in 7 simple steps
+              From customer creation to payment reconciliation, everything is automated
             </p>
           </motion.div>
 
@@ -113,32 +122,45 @@ export function SolutionSection() {
                   }`}
                 >
                   {/* Content */}
-                  <div className={`md:w-1/2 ${index % 2 === 0 ? "md:pr-12" : "md:pl-12"}`}>
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-700/10 transition-all">
+                  <div className={`md:w-5/12 ${index % 2 === 0 ? "md:pr-8" : "md:pl-8"}`}>
+                    <Card className="h-full group hover:border-teal-300 hover:shadow-xl hover:shadow-teal-700/10 transition-all">
                       <div className="flex items-center gap-4 mb-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-700 text-white font-bold text-sm">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform">
                           {step.number}
-                        </span>
-                        <h4 className="text-lg font-bold text-slate-900">
-                          {step.title}
-                        </h4>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-slate-900">
+                            {step.title}
+                          </h4>
+                        </div>
                       </div>
-                      <p className="text-slate-600">{step.description}</p>
-                    </div>
+                      <p className="text-slate-600 mb-4">{step.description}</p>
+                      <div className="space-y-2">
+                        {step.details.map((detail, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm">
+                            <CheckCircle2 size={14} className="text-teal-600 flex-shrink-0" />
+                            <span className="text-slate-600">{detail}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
                   </div>
 
                   {/* Timeline dot */}
-                  <div className="hidden md:flex items-center justify-center w-1/2">
+                  <div className="hidden md:flex items-center justify-center w-2/12">
                     <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
+                      animate={{ scale: [1, 1.2, 1] }}
                       transition={{
                         duration: 2,
                         delay: index * 0.2,
                         repeat: Infinity,
                       }}
-                      className="w-8 h-8 rounded-full bg-white border-4 border-teal-700 shadow-lg shadow-teal-700/30"
+                      className="w-4 h-4 rounded-full bg-white border-4 border-teal-700 shadow-lg shadow-teal-700/30"
                     ></motion.div>
                   </div>
+
+                  {/* Empty space for alternating layout */}
+                  <div className="hidden md:block md:w-5/12"></div>
 
                   {/* Mobile Arrow */}
                   {index < steps.length - 1 && (
@@ -156,10 +178,10 @@ export function SolutionSection() {
             variants={itemVariants}
             className="text-center pt-8"
           >
-            <p className="text-slate-600 mb-4">
+            <p className="text-slate-600 mb-4 text-lg">
               All automated. All real-time. No manual intervention needed.
             </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 border border-green-300 rounded-full">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 border border-green-200 rounded-full">
               <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-green-700">
                 Live reconciliation status

@@ -81,25 +81,34 @@ export function WhyPayMatchSection() {
   return (
     <section
       id="benefits"
-      className="py-20 md:py-32 bg-gradient-to-b from-white to-slate-50"
+      className="py-20 md:py-32 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden"
     >
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-green-100/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-100/10 rounded-full blur-3xl"></div>
+      </div>
+
       <Container>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
-          className="space-y-12"
+          viewport={{ once: true, margin: "-100px" }}
+          className="space-y-12 relative z-10"
         >
           {/* Header */}
           <motion.div
             variants={itemVariants}
-            className="text-center space-y-4 max-w-2xl mx-auto"
+            className="text-center space-y-4 max-w-3xl mx-auto"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-100 rounded-full mb-2">
+              <span className="text-sm font-medium text-green-700">Benefits</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 text-balance">
               Why Choose PayMatch
             </h2>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               Transform your payment operations with measurable impact
             </p>
           </motion.div>
@@ -109,7 +118,7 @@ export function WhyPayMatchSection() {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-50px" }}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {benefits.map((benefit) => {
@@ -118,26 +127,25 @@ export function WhyPayMatchSection() {
                 <motion.div
                   key={benefit.title}
                   variants={itemVariants}
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
                 >
                   <Card className="h-full group relative overflow-hidden">
                     {/* Background gradient */}
                     <div
-                      className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity bg-gradient-to-br ${benefit.color}`}
+                      className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-br ${benefit.color}`}
                     ></div>
 
                     <div className="relative space-y-4">
                       {/* Icon */}
                       <div
-                        className={`w-14 h-14 rounded-lg bg-gradient-to-br ${benefit.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                        className={`w-16 h-16 rounded-xl bg-gradient-to-br ${benefit.color} flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}
                       >
-                        <Icon size={28} className="text-white" />
+                        <Icon size={32} className="text-white" />
                       </div>
 
                       {/* Metric */}
                       <div>
-                        <p className="text-4xl font-bold text-slate-900">
+                        <p className="text-5xl font-bold text-slate-900">
                           {benefit.metric}
                         </p>
                         <p className="text-sm text-slate-600 mt-1">
@@ -146,7 +154,7 @@ export function WhyPayMatchSection() {
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-bold text-lg text-slate-900">
+                      <h3 className="font-bold text-xl text-slate-900 group-hover:text-teal-700 transition-colors">
                         {benefit.title}
                       </h3>
                     </div>

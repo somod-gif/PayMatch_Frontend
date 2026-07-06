@@ -9,6 +9,8 @@ import {
   Code2,
   Radio,
   RefreshCw,
+  Lock,
+  Shield,
 } from "lucide-react";
 
 export function TrustSection() {
@@ -33,23 +35,28 @@ export function TrustSection() {
   };
 
   const techStack = [
-    { icon: Webhook, label: "Nomba Virtual Accounts" },
-    { icon: Radio, label: "Nomba Webhooks" },
-    { icon: RefreshCw, label: "Transactions API" },
-    { icon: Server, label: "NestJS" },
-    { icon: Code2, label: "Next.js" },
-    { icon: Database, label: "PostgreSQL" },
+    { icon: Webhook, label: "Nomba Virtual Accounts", description: "Secure payment processing" },
+    { icon: Radio, label: "Nomba Webhooks", description: "Real-time notifications" },
+    { icon: RefreshCw, label: "Transactions API", description: "Instant reconciliation" },
+    { icon: Server, label: "NestJS Backend", description: "Scalable architecture" },
+    { icon: Code2, label: "Next.js Frontend", description: "Modern user experience" },
+    { icon: Database, label: "PostgreSQL", description: "Reliable data storage" },
+  ];
+
+  const securityFeatures = [
+    { icon: Lock, label: "End-to-End Encryption", description: "All data encrypted" },
+    { icon: Shield, label: "CBN Compliant", description: "Regulatory approved" },
   ];
 
   return (
-    <section className="py-16 bg-white border-b border-slate-100">
+    <section className="py-20 md:py-32 bg-gradient-to-b from-slate-50 to-white border-y border-slate-100">
       <Container>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="space-y-8"
+          className="space-y-12"
         >
           {/* Badge */}
           <motion.div
@@ -73,7 +80,7 @@ export function TrustSection() {
               Powered by Nomba APIs
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              Seamless integration with Nomba payment infrastructure
+              Seamless integration with Nomba payment infrastructure for reliable, real-time payment processing
             </p>
           </motion.div>
 
@@ -91,17 +98,51 @@ export function TrustSection() {
                 <motion.div
                   key={tech.label}
                   variants={itemVariants}
-                  className="group flex flex-col items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-700/10 transition-all"
+                  whileHover={{ y: -5 }}
+                  className="group flex flex-col items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-700/10 transition-all"
                 >
-                  <div className="p-3 bg-white rounded-lg group-hover:bg-teal-50 transition-colors">
+                  <div className="p-3 bg-white rounded-lg group-hover:bg-teal-50 transition-colors shadow-sm">
                     <Icon
                       size={24}
                       className="text-teal-700 group-hover:text-teal-600"
                     />
                   </div>
-                  <p className="text-xs font-semibold text-slate-600 text-center leading-tight">
-                    {tech.label}
-                  </p>
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-slate-900 mb-1">
+                      {tech.label}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {tech.description}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+          {/* Security Features */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto"
+          >
+            {securityFeatures.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.label}
+                  variants={itemVariants}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-green-50 to-teal-50 border border-green-200"
+                >
+                  <div className="p-3 bg-white rounded-lg shadow-sm">
+                    <Icon size={24} className="text-green-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{feature.label}</p>
+                    <p className="text-sm text-slate-600">{feature.description}</p>
+                  </div>
                 </motion.div>
               );
             })}

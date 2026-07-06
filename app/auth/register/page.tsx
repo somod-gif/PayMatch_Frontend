@@ -14,6 +14,7 @@ import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
+import { Eye, EyeOff, Lock, Mail, Building2 } from "lucide-react";
 
 const registerSchema = z.object({
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
@@ -30,6 +31,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register: registerUser, isLoading } = useAuth();
   const { addToast } = useToast();
 
@@ -68,12 +71,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center py-12 px-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-teal-100/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
+      </div>
+
       <Container size="sm">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          className="relative z-10"
         >
           <Card className="p-8 md:p-10">
             {/* Header */}
@@ -89,7 +99,7 @@ export default function RegisterPage() {
                 </div>
                 <span className="font-bold text-2xl text-teal-700">{APP_NAME}</span>
               </Link>
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">
                 Create your account
               </h1>
               <p className="text-slate-600">
@@ -98,10 +108,10 @@ export default function RegisterPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {error && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm text-amber-700">{error}</p>
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
 
@@ -132,23 +142,51 @@ export default function RegisterPage() {
                 {...register("phone")}
               />
 
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                error={errors.password?.message}
-                disabled={isLoading}
-                {...register("password")}
-              />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    error={errors.password?.message}
+                    disabled={isLoading}
+                    {...register("password")}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
 
-              <Input
-                label="Confirm password"
-                type="password"
-                placeholder="••••••••"
-                error={errors.confirmPassword?.message}
-                disabled={isLoading}
-                {...register("confirmPassword")}
-              />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Confirm password
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    error={errors.confirmPassword?.message}
+                    disabled={isLoading}
+                    {...register("confirmPassword")}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
 
               <Button
                 type="submit"
@@ -170,6 +208,27 @@ export default function RegisterPage() {
                   Sign in
                 </Link>
               </p>
+            </div>
+
+            {/* Trust badges */}
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <p className="text-xs text-center text-slate-500 mb-3">
+                Trusted by businesses across Nigeria
+              </p>
+              <div className="flex items-center justify-center gap-4 text-xs text-slate-600">
+                <div className="flex items-center gap-1">
+                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>No credit card</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>Free trial</span>
+                </div>
+              </div>
             </div>
           </Card>
         </motion.div>

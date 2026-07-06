@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
@@ -9,7 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { paymentsService } from "@/services";
 import { Payment } from "@/types";
-import { DollarSign, RefreshCw, ExternalLink, Share2, Mail } from "lucide-react";
+import { DollarSign, RefreshCw, ExternalLink, Share2, Mail, TrendingUp, Filter } from "lucide-react";
 import { CURRENCY, PAYMENT_STATUS_LABELS } from "@/constants";
 import { useToast } from "@/components/ui/Toast";
 
@@ -17,13 +18,14 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const { addToast } = useToast();
 
   const fetchPayments = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await paymentsService.list();
+      const response = await paymentsService.list({ status: statusFilter === "all" ? undefined : statusFilter });
       if (response.success) {
         setPayments(response.data);
       } else {
@@ -38,7 +40,9 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [statusFilter]);
+
+  const filteredPayments = statusFilter === "all" ? payments : payments.filter(p => p.status === statusFilter);
 
   const getBadgeVariant = (status: string): "success" | "warning" | "error" | "info" | "default" => {
     switch (status) {
@@ -86,6 +90,59 @@ export default function PaymentsPage() {
         </Button>
       </div>
 
+      {/* Stats */}
+      {!loading && !error && payments.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <p className="text-sm text-slate-600 mb-1">Total Payments</p>
+            <p className="text-2xl font-bold text-slate-900">{payments.length}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-slate-600 mb-1">Completed</p>
+            <p className="text-2xl font-bold text-green-700">
+              {payments.filter(p => p.status === "completed").length}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-slate-600 mb-1">Pending</p>
+            <p className="text-2xl font-bold text-amber-700">
+              {payments.filter(p => p.status === "pending").length}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-slate-600 mb-1">Total Revenue</p>
+            <p className="text-2xl font-bold text-teal-700">
+              {formatCurrency(payments.reduce((sum, p) => sum + Number(p.amount), 0))}
+            </p>
+          </Card>
+        </div>
+      )}
+
+      {/* Filters */}
+      {!loading && !error && payments.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <Filter size={18} className="text-slate-600" />
+            <span className="text-sm font-medium text-slate-700">Filter by status:</span>
+            <div className="flex gap-2 flex-wrap">
+              {["all", "completed", "pending", "failed", "refunded"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    statusFilter === status
+                      ? "bg-teal-700 text-white"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Content */}
       <Card>
         {loading ? (
@@ -102,11 +159,17 @@ export default function PaymentsPage() {
               Try Again
             </Button>
           </div>
-        ) : payments.length === 0 ? (
+        ) : filteredPayments.length === 0 ? (
           <EmptyState
             icon={<DollarSign size={48} className="text-slate-400" />}
-            title="No payments yet"
-            description="Payments will appear here once customers start paying to their virtual accounts"
+            title={statusFilter === "all" ? "No payments yet" : `No ${statusFilter} payments`}
+            description={
+              statusFilter === "all"
+                ? "Payments will appear here once customers start paying to their virtual accounts"
+                : "Try adjusting your filter"
+            }
+            actionLabel={statusFilter === "all" ? undefined : "Clear Filter"}
+            onAction={() => setStatusFilter("all")}
           />
         ) : (
           <Table>
@@ -118,7 +181,7 @@ export default function PaymentsPage() {
               <TableCell header>Date</TableCell>
             </TableHeader>
             <TableBody>
-              {payments.map((payment) => (
+              {filteredPayments.map((payment) => (
                 <TableRow key={payment.id}>
                   <TableCell>
                     <span className="font-mono text-sm">
@@ -126,10 +189,12 @@ export default function PaymentsPage() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <p className="font-semibold text-slate-900">
-                      {formatCurrency(payment.amount)}
-                    </p>
-                    <p className="text-xs text-slate-500">{payment.currency}</p>
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        {formatCurrency(payment.amount)}
+                      </p>
+                      <p className="text-xs text-slate-500">{payment.currency}</p>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <span className="capitalize">{payment.paymentMethod}</span>

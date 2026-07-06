@@ -76,6 +76,11 @@ export function FAQSection() {
             variants={itemVariants}
             className="text-center space-y-4"
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 border border-teal-200 rounded-full mb-2">
+              <span className="text-sm font-medium text-teal-700">
+                FAQ
+              </span>
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900">
               Frequently Asked Questions
             </h2>

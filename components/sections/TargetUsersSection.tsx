@@ -87,24 +87,32 @@ export function TargetUsersSection() {
   };
 
   return (
-    <section className="py-20 md:py-32 bg-white">
+    <section className="py-20 md:py-32 bg-white relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 right-0 w-96 h-96 bg-purple-100/10 rounded-full blur-3xl"></div>
+      </div>
+
       <Container>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true }}
-          className="space-y-12"
+          viewport={{ once: true, margin: "-100px" }}
+          className="space-y-12 relative z-10"
         >
           {/* Header */}
           <motion.div
             variants={itemVariants}
-            className="text-center space-y-4 max-w-2xl mx-auto"
+            className="text-center space-y-4 max-w-3xl mx-auto"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-100 rounded-full mb-2">
+              <span className="text-sm font-medium text-purple-700">Use Cases</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 text-balance">
               Built for Everyone
             </h2>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               PayMatch works for any business that needs payment reconciliation
             </p>
           </motion.div>
@@ -114,7 +122,7 @@ export function TargetUsersSection() {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-50px" }}
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             {users.map((user) => {
@@ -123,28 +131,31 @@ export function TargetUsersSection() {
                 <motion.div
                   key={user.title}
                   variants={itemVariants}
-                  whileHover={{ y: -5 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
                 >
                   <Card
-                    className="h-full group flex flex-col"
+                    className="h-full group flex flex-col relative overflow-hidden"
                   >
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="p-3 bg-gradient-to-br from-teal-100 to-slate-100 rounded-lg group-hover:from-teal-200 transition-colors">
-                        <Icon size={24} className="text-teal-700" />
+                    {/* Subtle gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    <div className="flex items-start gap-3 mb-4 relative z-10">
+                      <div className="p-3 bg-gradient-to-br from-purple-100 to-teal-100 rounded-xl group-hover:from-purple-200 group-hover:scale-110 transition-all">
+                        <Icon size={24} className="text-purple-700" />
                       </div>
-                      <h3 className="font-bold text-lg text-slate-900 flex-grow">
+                      <h3 className="font-bold text-lg text-slate-900 flex-grow group-hover:text-purple-700 transition-colors">
                         {user.title}
                       </h3>
                     </div>
 
-                    <p className="text-slate-600 text-sm mb-4 flex-grow">
+                    <p className="text-slate-600 text-sm mb-4 flex-grow relative z-10">
                       {user.description}
                     </p>
 
-                    <div className="space-y-2 pt-4 border-t border-slate-100">
+                    <div className="space-y-2 pt-4 border-t border-slate-100 relative z-10">
                       {user.examples.map((example, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs">
-                          <div className="w-1 h-1 rounded-full bg-teal-600"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0"></div>
                           <span className="text-slate-600">{example}</span>
                         </div>
                       ))}

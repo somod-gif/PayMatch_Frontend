@@ -1,41 +1,52 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { NAV_LINKS, APP_NAME } from "@/constants";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
-import { Container } from "@/components/ui/Container";
-import { cn } from "@/lib/utils";
-import { useScrollPosition } from "@/hooks";
-import { NAV_LINKS, APP_NAME, APP_GITHUB_URL } from "@/constants";
 
 export function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isScrolled = useScrollPosition(50);
+  const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <nav
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/80 backdrop-blur-md shadow-lg shadow-slate-200/20"
+          ? "bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200"
           : "bg-transparent"
-      )}
+      }`}
     >
-      <Container>
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center flex-shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 relative">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 md:w-10 md:h-10 relative transition-transform group-hover:scale-110">
               <Image
                 src="/images/logo.png"
-                alt="PayMatch Logo"
+                alt={APP_NAME}
                 fill
                 className="object-contain"
                 priority
               />
             </div>
+            <span className="font-bold text-xl md:text-2xl text-teal-700">
+              {APP_NAME}
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -44,70 +55,96 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-slate-600 hover:text-teal-700 font-medium transition-colors"
+                className="text-sm font-medium text-slate-600 hover:text-teal-700 transition-colors relative group"
               >
                 {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-teal-700 transition-all group-hover:w-full" />
               </Link>
             ))}
           </div>
 
-          {/* Desktop CTA Buttons */}
+          {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href={APP_GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-slate-600 hover:text-teal-700 transition-colors px-4 py-2"
-            >
-              GitHub
-            </a>
-            <Link href="/dashboard">
-              <Button size="md">Get Started</Button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">
+                <Button variant="primary" size="sm">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm">
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/auth/register">
+                  <Button variant="primary" size="sm">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-slate-600 hover:text-teal-700"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+            aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
+      {/* Mobile Menu */}
+      <AnimatePresence>
         {isMobileMenuOpen && (
-          <div className="md:hidden pb-4 space-y-2 border-t border-slate-200">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="block px-4 py-2 text-slate-600 hover:text-teal-700 font-medium rounded-lg hover:bg-slate-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="flex gap-2 px-4 pt-4">
-              <a
-                href={APP_GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1"
-              >
-                <Button variant="ghost" size="md" className="w-full">
-                  GitHub
-                </Button>
-              </a>
-              <Link href="/dashboard" className="flex-1">
-                <Button size="md" className="w-full">
-                  Get Started
-                </Button>
-              </Link>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="md:hidden bg-white border-b border-slate-200 overflow-hidden"
+          >
+            <div className="px-4 py-4 space-y-3">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 text-slate-600 hover:text-teal-700 transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-3 border-t border-slate-200 space-y-2">
+                {isAuthenticated ? (
+                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="primary" className="w-full">
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        Sign in
+                      </Button>
+                    </Link>
+                    <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="primary" className="w-full">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      </Container>
+      </AnimatePresence>
     </nav>
   );
 }

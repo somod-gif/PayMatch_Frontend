@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { webhooksService } from "@/services";
 import { WebhookLog } from "@/types";
-import { Webhook, RefreshCw } from "lucide-react";
+import { Webhook, RefreshCw, Activity, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 
 export default function WebhooksPage() {
   const [webhooks, setWebhooks] = useState<WebhookLog[]>([]);
@@ -37,6 +37,9 @@ export default function WebhooksPage() {
     fetchWebhooks();
   }, []);
 
+  const processedCount = webhooks.filter(w => w.processed).length;
+  const pendingCount = webhooks.length - processedCount;
+
   const getBadgeVariant = (processed: boolean): "success" | "warning" | "default" => {
     return processed ? "success" : "warning";
   };
@@ -62,6 +65,42 @@ export default function WebhooksPage() {
           Refresh
         </Button>
       </div>
+
+      {/* Stats */}
+      {!loading && !error && webhooks.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Activity size={18} className="text-slate-600" />
+              <p className="text-sm text-slate-600">Total Events</p>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{webhooks.length}</p>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 size={18} className="text-green-600" />
+              <p className="text-sm text-slate-600">Processed</p>
+            </div>
+            <p className="text-2xl font-bold text-green-700">{processedCount}</p>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock size={18} className="text-amber-600" />
+              <p className="text-sm text-slate-600">Pending</p>
+            </div>
+            <p className="text-2xl font-bold text-amber-700">{pendingCount}</p>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={18} className="text-red-600" />
+              <p className="text-sm text-slate-600">Failed</p>
+            </div>
+            <p className="text-2xl font-bold text-red-700">
+              {webhooks.filter(w => !w.processed).length}
+            </p>
+          </Card>
+        </div>
+      )}
 
       {/* Content */}
       <Card>

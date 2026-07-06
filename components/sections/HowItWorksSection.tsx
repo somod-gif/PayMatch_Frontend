@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
-import { ArrowRight, Settings, Download, Zap } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { ArrowRight, Settings, Download, Zap, CheckCircle2 } from "lucide-react";
 
 export function HowItWorksSection() {
   const steps = [
@@ -50,7 +51,7 @@ export function HowItWorksSection() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.15,
         delayChildren: 0.2,
       },
     },
@@ -81,18 +82,24 @@ export function HowItWorksSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="space-y-12 relative z-10"
+          className="space-y-16 relative z-10"
         >
           {/* Header */}
           <motion.div
             variants={itemVariants}
             className="text-center space-y-4 max-w-2xl mx-auto"
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 border border-teal-200 rounded-full mb-2">
+              <CheckCircle2 size={16} className="text-teal-700" />
+              <span className="text-sm font-medium text-teal-700">
+                How It Works
+              </span>
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900">
-              How It Works
+              Three simple steps to complete payment reconciliation
             </h2>
             <p className="text-lg text-slate-600">
-              Three simple steps to complete payment reconciliation
+              Get started in minutes and transform how you handle payments
             </p>
           </motion.div>
 
@@ -102,10 +109,10 @@ export function HowItWorksSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-6 relative"
+            className="grid md:grid-cols-3 gap-8 relative"
           >
             {/* Connecting arrows - Desktop only */}
-            <div className="hidden md:block absolute top-1/3 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-teal-300 to-transparent pointer-events-none -z-10"></div>
+            <div className="hidden md:block absolute top-24 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-teal-300 to-transparent pointer-events-none -z-10"></div>
 
             {steps.map((step, index) => {
               const Icon = step.icon;
@@ -115,37 +122,39 @@ export function HowItWorksSection() {
                   variants={itemVariants}
                   className="relative"
                 >
-                  <Card className="h-full flex flex-col group">
+                  <Card className="h-full flex flex-col group hover:border-teal-300 hover:shadow-xl hover:shadow-teal-700/10 transition-all">
                     {/* Step Number */}
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center text-white font-bold text-xl">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center text-white font-bold text-2xl shadow-lg group-hover:scale-110 transition-transform">
                         {step.number}
                       </div>
                       {index < steps.length - 1 && (
-                        <div className="hidden md:flex absolute -right-8 top-5 text-teal-400">
+                        <div className="hidden md:flex absolute -right-8 top-6 text-teal-400">
                           <ArrowRight size={32} />
                         </div>
                       )}
                     </div>
 
                     {/* Icon */}
-                    <div className="mb-4 p-4 bg-gradient-to-br from-teal-50 to-slate-50 rounded-lg w-fit group-hover:from-teal-100 transition-colors">
-                      <Icon size={28} className="text-teal-700" />
+                    <div className="mb-4 p-4 bg-gradient-to-br from-teal-50 to-slate-50 rounded-xl w-fit group-hover:from-teal-100 transition-colors">
+                      <Icon size={32} className="text-teal-700" />
                     </div>
 
                     {/* Content */}
                     <h3 className="font-bold text-xl text-slate-900 mb-2">
                       {step.title}
                     </h3>
-                    <p className="text-slate-600 mb-6 flex-grow">
+                    <p className="text-slate-600 mb-6 flex-grow leading-relaxed">
                       {step.description}
                     </p>
 
                     {/* Details */}
-                    <div className="space-y-2 pt-4 border-t border-slate-100">
+                    <div className="space-y-3 pt-4 border-t border-slate-100">
                       {step.details.map((detail, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-teal-600"></div>
+                        <div key={i} className="flex items-center gap-3 text-sm">
+                          <div className="w-5 h-5 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle2 size={12} className="text-teal-700" />
+                          </div>
                           <span className="text-slate-600">{detail}</span>
                         </div>
                       ))}
@@ -161,6 +170,19 @@ export function HowItWorksSection() {
                 </motion.div>
               );
             })}
+          </motion.div>
+
+          {/* Bottom CTA */}
+          <motion.div
+            variants={itemVariants}
+            className="text-center pt-8"
+          >
+            <div className="inline-flex flex-col sm:flex-row gap-4 items-center">
+              <Button size="lg" icon={<ArrowRight size={20} />}>
+                Start Free Trial
+              </Button>
+              <span className="text-sm text-slate-600">No credit card required</span>
+            </div>
           </motion.div>
         </motion.div>
       </Container>

@@ -66,6 +66,13 @@ export interface CreateCustomerPayload {
   customerReference?: string;
 }
 
+export interface UpdateCustomerPayload {
+  fullName: string;
+  email: string;
+  phone?: string;
+  customerReference?: string;
+}
+
 // --- Invoice Types ---
 export interface Invoice {
   id: string;

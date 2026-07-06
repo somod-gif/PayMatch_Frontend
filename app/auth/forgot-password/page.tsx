@@ -43,12 +43,19 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center py-12 px-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-teal-100/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
+      </div>
+
       <Container size="sm">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          className="relative z-10"
         >
           <Card className="p-8 md:p-10">
             {/* Header */}
@@ -64,7 +71,7 @@ export default function ForgotPasswordPage() {
                 </div>
                 <span className="font-bold text-2xl text-teal-700">{APP_NAME}</span>
               </Link>
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">
                 Reset your password
               </h1>
               <p className="text-slate-600">
@@ -78,23 +85,23 @@ export default function ForgotPasswordPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-8"
               >
-                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail size={24} className="text-teal-700" />
+                <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Mail size={32} className="text-teal-700" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-2">
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">
                   Check your email
                 </h3>
-                <p className="text-slate-600 text-sm">
+                <p className="text-slate-600 mb-6">
                   We have sent password reset instructions to your email address.
                 </p>
-                <Link href="/auth/login" className="block mt-6">
+                <Link href="/auth/login">
                   <Button variant="outline" className="w-full">
                     Back to sign in
                   </Button>
                 </Link>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <Input
                   label="Email address"
                   type="email"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { invoicesService, customersService, virtualAccountsService } from "@/services";
 import { Invoice, CreateInvoicePayload, Customer } from "@/types";
-import { FileText, Search, Plus, Calendar, User, CreditCard } from "lucide-react";
+import { FileText, Search, Plus, Calendar, User, CreditCard, ExternalLink } from "lucide-react";
 import { CURRENCY, INVOICE_STATUS_LABELS } from "@/constants";
 import { useToast } from "@/components/ui/Toast";
 import { useForm } from "react-hook-form";
@@ -259,14 +260,20 @@ export default function InvoicesPage() {
               {filteredInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {invoice.description}
-                      </p>
-                      <p className="text-xs text-slate-500 font-mono">
-                        #{invoice.invoiceNumber}
-                      </p>
-                    </div>
+                    <Link 
+                      href={`/dashboard/invoices/${invoice.id}`}
+                      className="group flex items-center gap-2 hover:text-teal-700 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-slate-900 group-hover:text-teal-700 transition-colors">
+                          {invoice.description}
+                        </p>
+                        <p className="text-xs text-slate-500 font-mono">
+                          #{invoice.invoiceNumber}
+                        </p>
+                      </div>
+                      <ExternalLink size={14} className="text-slate-400 group-hover:text-teal-600" />
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
