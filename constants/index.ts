@@ -78,18 +78,16 @@ export const PAGINATION_DEFAULT_LIMIT = 20;
 
 // --- Status Labels ---
 export const INVOICE_STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  partial: "Partial",
+  pending: "Pending",
   paid: "Paid",
+  partial: "Partial",
   overdue: "Overdue",
   cancelled: "Cancelled",
 };
 
 export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
-  matched: "Matched",
-  unmatched: "Unmatched",
+  completed: "Completed",
   failed: "Failed",
   refunded: "Refunded",
 };

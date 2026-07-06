@@ -64,7 +64,7 @@ export default function DashboardLayout({
             {user && (
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-teal-700 flex items-center justify-center text-white text-sm font-medium">
-                  {user.name?.charAt(0) || "U"}
+                  {user.businessName?.charAt(0) || "U"}
                 </div>
                 <button
                   onClick={logout}

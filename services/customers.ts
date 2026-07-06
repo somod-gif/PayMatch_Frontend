@@ -3,13 +3,13 @@
 // ============================================================
 
 import { get, post, put, del } from "@/lib/api";
-import type { Customer, CreateCustomerPayload, ApiResponse, PaginatedResponse } from "@/types";
+import type { Customer, CreateCustomerPayload, ApiResponse } from "@/types";
 
-const BASE = "/customers";
+const BASE = "/api/v1/customers";
 
 export const customersService = {
   list: (params?: { page?: number; limit?: number; search?: string }) =>
-    get<PaginatedResponse<Customer>>(BASE, { params }),
+    get<ApiResponse<Customer[]>>(BASE, { params }),
 
   getById: (id: string) =>
     get<ApiResponse<Customer>>(`${BASE}/${id}`),
