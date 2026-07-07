@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { DASHBOARD_NAV, APP_NAME } from "@/constants";
@@ -35,31 +34,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay - full screen backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - full screen fixed on mobile, fixed on desktop */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-out md:translate-x-0 md:static md:z-auto",
+          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-out",
+          "md:translate-x-0 md:fixed md:z-30",
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200 shrink-0">
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 relative transition-transform group-hover:scale-110">
-              <Image
-                src="/images/logo.png"
-                alt={APP_NAME}
-                fill
-                className="object-contain"
-              />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center shadow-sm transition-transform group-hover:scale-110">
+              <span className="text-white font-bold text-sm">P</span>
             </div>
             <span className="font-bold text-lg text-teal-700">{APP_NAME}</span>
           </Link>
@@ -101,7 +96,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200">
+        <div className="px-6 py-4 border-t border-slate-200 shrink-0">
           <p className="text-xs text-slate-400">
             &copy; 2026 {APP_NAME}. All rights reserved.
           </p>
