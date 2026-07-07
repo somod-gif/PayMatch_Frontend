@@ -9,7 +9,7 @@ import {
   Trash2,
   Clock,
   Layers,
-  CheckCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 export function WhyPayMatchSection() {
@@ -50,9 +50,9 @@ export function WhyPayMatchSection() {
       color: "from-green-500 to-emerald-500",
     },
     {
-      icon: CheckCircle,
+      icon: CheckCircle2,
       title: "Peace of Mind",
-      metric: "✓",
+      metric: "100%",
       description: "Audit-ready compliance and transparency",
       color: "from-teal-500 to-cyan-500",
     },

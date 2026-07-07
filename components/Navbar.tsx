@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { NAV_LINKS, APP_NAME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -12,13 +11,12 @@ import { Button } from "@/components/ui/Button";
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -27,24 +25,18 @@ export function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200"
+          ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200"
           : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 md:w-10 md:h-10 relative transition-transform group-hover:scale-110">
-              <Image
-                src="/images/logo.png"
-                alt={APP_NAME}
-                fill
-                className="object-contain"
-                priority
-              />
+          {/* Logo - P in a box */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center shadow-sm transition-transform group-hover:scale-110 shadow-teal-700/20">
+              <span className="text-white font-bold text-base">P</span>
             </div>
-            <span className="font-bold text-xl md:text-2xl text-teal-700">
+            <span className="font-bold text-xl md:text-2xl text-slate-900 tracking-tight">
               {APP_NAME}
             </span>
           </Link>
@@ -67,8 +59,9 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <Link href="/dashboard">
-                <Button variant="primary" size="sm">
+                <Button size="sm">
                   Dashboard
+                  <ArrowRight size={16} className="ml-1" />
                 </Button>
               </Link>
             ) : (
@@ -79,8 +72,8 @@ export function Navbar() {
                   </Button>
                 </Link>
                 <Link href="/auth/register">
-                  <Button variant="primary" size="sm">
-                    Get Started
+                  <Button size="sm">
+                    Get Started Free
                   </Button>
                 </Link>
               </>
@@ -122,7 +115,7 @@ export function Navbar() {
               <div className="pt-3 border-t border-slate-200 space-y-2">
                 {isAuthenticated ? (
                   <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="primary" className="w-full">
+                    <Button className="w-full">
                       Dashboard
                     </Button>
                   </Link>
@@ -134,8 +127,8 @@ export function Navbar() {
                       </Button>
                     </Link>
                     <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="primary" className="w-full">
-                        Get Started
+                      <Button className="w-full">
+                        Get Started Free
                       </Button>
                     </Link>
                   </>

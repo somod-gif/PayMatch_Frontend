@@ -22,10 +22,11 @@ export default function Home() {
         <TrustSection />
         <ProblemSection />
         <SolutionSection />
-        <FeaturesSection />
+        <TargetUsersSection />
+        {/* <FeaturesSection /> */}
         <HowItWorksSection />
         <WhyPayMatchSection />
-        <TargetUsersSection />
+
         <FAQSection />
         <CTASection />
       </main>
