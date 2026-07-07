@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +13,7 @@ import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/Toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -47,8 +46,8 @@ export default function LoginPage() {
         message: "You have been successfully logged in.",
       });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      const errorMessage = error?.response?.data?.error || "Login failed. Please check your credentials.";
+      const error = err as { response?: { data?: { message?: string } } };
+      const errorMessage = error?.response?.data?.message || "Login failed. Please check your credentials.";
       setError(errorMessage);
       addToast({
         type: "error",
@@ -77,20 +76,15 @@ export default function LoginPage() {
             {/* Header */}
             <div className="text-center mb-8">
               <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 relative">
-                  <Image
-                    src="/images/logo.png"
-                    alt={APP_NAME}
-                    fill
-                    className="object-contain"
-                  />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-lg">P</span>
                 </div>
                 <span className="font-bold text-2xl text-teal-700">{APP_NAME}</span>
               </Link>
               <h1 className="text-3xl font-bold text-slate-900 mb-2">
                 Welcome back
               </h1>
-              <p className="text-slate-600">
+              <p className="text-slate-500">
                 Sign in to your account to continue
               </p>
             </div>
@@ -98,7 +92,7 @@ export default function LoginPage() {
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
@@ -154,7 +148,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
+                loading={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
@@ -180,15 +174,11 @@ export default function LoginPage() {
               </p>
               <div className="flex items-center justify-center gap-4 text-xs text-slate-600">
                 <div className="flex items-center gap-1">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <CheckCircle2 size={16} className="text-green-600" />
                   <span>Secure login</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <CheckCircle2 size={16} className="text-green-600" />
                   <span>256-bit SSL</span>
                 </div>
               </div>

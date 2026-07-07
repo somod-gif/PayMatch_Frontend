@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { APP_NAME } from "@/constants";
-import { Mail } from "lucide-react";
+import { Mail, CheckCircle2 } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -61,20 +60,15 @@ export default function ForgotPasswordPage() {
             {/* Header */}
             <div className="text-center mb-8">
               <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 relative">
-                  <Image
-                    src="/images/logo.png"
-                    alt={APP_NAME}
-                    fill
-                    className="object-contain"
-                  />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-lg">P</span>
                 </div>
                 <span className="font-bold text-2xl text-teal-700">{APP_NAME}</span>
               </Link>
               <h1 className="text-3xl font-bold text-slate-900 mb-2">
                 Reset your password
               </h1>
-              <p className="text-slate-600">
+              <p className="text-slate-500">
                 Enter your email to receive reset instructions
               </p>
             </div>
@@ -114,7 +108,7 @@ export default function ForgotPasswordPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLoading}
+                  loading={isLoading}
                 >
                   {isLoading ? "Sending..." : "Send reset link"}
                 </Button>
