@@ -1,18 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "next build",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "routes": [
-    {
-      "src": "/(.*)",
-      "headers": {
-        "x-frame-options": "DENY",
-        "x-content-type-options": "nosniff",
-        "x-xss-protection": "1; mode=block",
-        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
-      },
-      "continue": true
-    }
-  ]
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "installCommand": "npm install"
 }
