@@ -1,22 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { StatusBadge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
-import { LoadingSkeleton, TableRowSkeleton } from "@/components/ui/LoadingSkeleton";
+import { TableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { customersService } from "@/services";
-import { Customer, CreateCustomerPayload, UpdateCustomerPayload } from "@/types";
-import { Users, Search, Plus, Mail, Building2, X, Edit2, Trash2, MoreVertical } from "lucide-react";
-import { CUSTOMER_STATUS_LABELS } from "@/constants";
+import type { Customer, CreateCustomerPayload, UpdateCustomerPayload } from "@/types";
+import { Users, Search, Plus, Mail, Edit2, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { getInitials } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/api";
 
 const createCustomerSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -41,8 +43,6 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -80,8 +80,8 @@ export default function CustomersPage() {
       } else {
         setError(response.message || "Failed to load customers");
       }
-    } catch {
-      setError("Unable to connect to the backend. Please check your connection.");
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -97,19 +97,6 @@ export default function CustomersPage() {
       c.email.toLowerCase().includes(search.toLowerCase()) ||
       (c.customerReference && c.customerReference.toLowerCase().includes(search.toLowerCase()))
   );
-
-  const getBadgeVariant = (status: string): "success" | "warning" | "error" | "default" => {
-    switch (status) {
-      case "active":
-        return "success";
-      case "inactive":
-        return "warning";
-      case "archived":
-        return "error";
-      default:
-        return "default";
-    }
-  };
 
   const onCreateCustomer = async (data: CreateCustomerFormValues) => {
     setCreating(true);
@@ -137,11 +124,11 @@ export default function CustomersPage() {
           message: response.message || "An error occurred.",
         });
       }
-    } catch {
+    } catch (err) {
       addToast({
         type: "error",
         title: "Error",
-        message: "Unable to create customer. Please try again.",
+        message: getErrorMessage(err),
       });
     } finally {
       setCreating(false);
@@ -176,11 +163,11 @@ export default function CustomersPage() {
           message: response.message || "An error occurred.",
         });
       }
-    } catch {
+    } catch (err) {
       addToast({
         type: "error",
         title: "Error",
-        message: "Unable to update customer. Please try again.",
+        message: getErrorMessage(err),
       });
     } finally {
       setUpdating(false);
@@ -208,11 +195,11 @@ export default function CustomersPage() {
           message: response.message || "An error occurred.",
         });
       }
-    } catch {
+    } catch (err) {
       addToast({
         type: "error",
         title: "Error",
-        message: "Unable to delete customer. Please try again.",
+        message: getErrorMessage(err),
       });
     } finally {
       setDeleting(false);
@@ -236,32 +223,47 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Customers
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Manage your customer profiles and virtual accounts
-          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Customers</h1>
+            {!loading && !error && (
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                {customers.length} total
+              </span>
+            )}
+          </div>
+          <p className="text-slate-500">Manage your customer profiles and virtual accounts</p>
         </div>
-        <Button icon={<Plus size={18} />} onClick={() => setShowCreateModal(true)}>
-          Add Customer
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            icon={<RefreshCw size={16} />}
+            onClick={fetchCustomers}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+          <Button icon={<Plus size={18} />} onClick={() => setShowCreateModal(true)}>
+            Add Customer
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
       <div className="max-w-sm">
         <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             type="search"
-            placeholder="Search customers..."
+            placeholder="Search customers by name, email, or reference..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -270,17 +272,16 @@ export default function CustomersPage() {
       </div>
 
       {/* Content */}
-      <Card>
+      <Card padding="none">
         {loading ? (
-          <div className="space-y-4">
-            <LoadingSkeleton height="2rem" width="100%" />
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRowSkeleton key={i} />
-            ))}
+          <div className="p-6">
+            <TableSkeleton rows={5} columns={6} />
           </div>
         ) : error ? (
-          <div className="p-8 text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="p-12 text-center">
+            <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Failed to load customers</h3>
+            <p className="text-slate-500 mb-6">{error}</p>
             <Button variant="outline" onClick={fetchCustomers}>
               Try Again
             </Button>
@@ -292,13 +293,13 @@ export default function CustomersPage() {
             description={
               search
                 ? "Try adjusting your search query"
-                : "Add your first customer to get started"
+                : "Add your first customer to start creating invoices"
             }
             actionLabel={search ? undefined : "Add Customer"}
             onAction={() => setShowCreateModal(true)}
           />
         ) : (
-          <>
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableCell header>Name</TableCell>
@@ -313,35 +314,35 @@ export default function CustomersPage() {
                   <TableRow key={customer.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-teal-50 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-emerald-50 flex items-center justify-center shrink-0">
                           <span className="text-sm font-bold text-teal-700">
-                            {customer.fullName.charAt(0)}
+                            {getInitials(customer.fullName)}
                           </span>
                         </div>
-                        <span className="font-medium">{customer.fullName}</span>
+                        <span className="font-medium text-slate-900">{customer.fullName}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Mail size={14} className="text-slate-400" />
-                        {customer.email}
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail size={14} className="text-slate-400 shrink-0" />
+                        <span className="text-slate-600">{customer.email}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-sm text-slate-600">
-                        {customer.customerReference}
+                        {customer.customerReference || "-"}
                       </span>
                     </TableCell>
                     <TableCell>
-                      {customer.phone || <span className="text-slate-400">-</span>}
+                      <span className="text-sm text-slate-600">
+                        {customer.phone || <span className="text-slate-300">-</span>}
+                      </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getBadgeVariant(customer.status)}>
-                        {CUSTOMER_STATUS_LABELS[customer.status]}
-                      </Badge>
+                      <StatusBadge status={customer.status} />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -355,7 +356,7 @@ export default function CustomersPage() {
                           icon={<Trash2 size={16} />}
                           onClick={() => handleDelete(customer)}
                           title="Delete customer"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         />
                       </div>
                     </TableCell>
@@ -363,47 +364,17 @@ export default function CustomersPage() {
                 ))}
               </TableBody>
             </Table>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
-                <p className="text-sm text-slate-600">
-                  Page {currentPage} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+          </div>
         )}
       </Card>
 
       {/* Create Customer Modal */}
       <Modal
         isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          resetCreate();
-        }}
+        onClose={() => { setShowCreateModal(false); resetCreate(); }}
         title="Add New Customer"
       >
-        <form onSubmit={handleSubmitCreate(onCreateCustomer)} className="space-y-4">
+        <form onSubmit={handleSubmitCreate(onCreateCustomer)} className="space-y-5">
           <Input
             label="Full Name"
             placeholder="John Doe"
@@ -430,17 +401,10 @@ export default function CustomersPage() {
             {...registerCreate("customerReference")}
           />
           <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowCreateModal(false);
-                resetCreate();
-              }}
-            >
+            <Button type="button" variant="outline" onClick={() => { setShowCreateModal(false); resetCreate(); }}>
               Cancel
             </Button>
-            <Button type="submit" disabled={creating}>
+            <Button type="submit" loading={creating}>
               {creating ? "Creating..." : "Create Customer"}
             </Button>
           </div>
@@ -450,14 +414,10 @@ export default function CustomersPage() {
       {/* Edit Customer Modal */}
       <Modal
         isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setSelectedCustomer(null);
-          resetUpdate();
-        }}
+        onClose={() => { setShowEditModal(false); setSelectedCustomer(null); resetUpdate(); }}
         title="Edit Customer"
       >
-        <form onSubmit={handleSubmitUpdate(onUpdateCustomer)} className="space-y-4">
+        <form onSubmit={handleSubmitUpdate(onUpdateCustomer)} className="space-y-5">
           <Input
             label="Full Name"
             placeholder="John Doe"
@@ -484,18 +444,10 @@ export default function CustomersPage() {
             {...registerUpdate("customerReference")}
           />
           <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowEditModal(false);
-                setSelectedCustomer(null);
-                resetUpdate();
-              }}
-            >
+            <Button type="button" variant="outline" onClick={() => { setShowEditModal(false); setSelectedCustomer(null); resetUpdate(); }}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updating}>
+            <Button type="submit" loading={updating}>
               {updating ? "Updating..." : "Update Customer"}
             </Button>
           </div>
@@ -505,39 +457,32 @@ export default function CustomersPage() {
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setSelectedCustomer(null);
-        }}
+        onClose={() => { setShowDeleteModal(false); setSelectedCustomer(null); }}
         title="Delete Customer"
       >
-        <div className="space-y-4">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">
-              Are you sure you want to delete <strong>{selectedCustomer?.fullName}</strong>? This action cannot be undone.
-            </p>
+        <div className="space-y-5">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">
+                Are you sure you want to delete <strong>{selectedCustomer?.fullName}</strong>? This action cannot be undone and will remove all associated data.
+              </p>
+            </div>
           </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowDeleteModal(false);
-                setSelectedCustomer(null);
-              }}
-            >
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => { setShowDeleteModal(false); setSelectedCustomer(null); }}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="danger"
               onClick={onDeleteCustomer}
-              disabled={deleting}
-              className="bg-red-600 hover:bg-red-700"
+              loading={deleting}
             >
               {deleting ? "Deleting..." : "Delete Customer"}
             </Button>
           </div>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   );
 }

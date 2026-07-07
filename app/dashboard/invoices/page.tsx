@@ -2,22 +2,25 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { StatusBadge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
-import { LoadingSkeleton, TableRowSkeleton } from "@/components/ui/LoadingSkeleton";
+import { TableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { invoicesService, customersService, virtualAccountsService } from "@/services";
-import { Invoice, CreateInvoicePayload, Customer } from "@/types";
-import { FileText, Search, Plus, Calendar, User, CreditCard, ExternalLink } from "lucide-react";
-import { CURRENCY, INVOICE_STATUS_LABELS } from "@/constants";
+import type { Invoice, CreateInvoicePayload, Customer } from "@/types";
+import { FileText, Search, Plus, Calendar, User, CreditCard, ExternalLink, AlertCircle, RefreshCw } from "lucide-react";
+import { CURRENCY } from "@/constants";
 import { useToast } from "@/components/ui/Toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/api";
 
 const createInvoiceSchema = z.object({
   customerId: z.string().min(1, "Please select a customer"),
@@ -61,8 +64,8 @@ export default function InvoicesPage() {
       } else {
         setError(response.message || "Failed to load invoices");
       }
-    } catch {
-      setError("Unable to connect to the backend. Please check your connection.");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Unable to connect to the backend. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -75,7 +78,7 @@ export default function InvoicesPage() {
         setCustomers(response.data);
       }
     } catch {
-      // Silently fail - customers may not be loaded yet
+      // Silently fail
     }
   };
 
@@ -90,32 +93,6 @@ export default function InvoicesPage() {
       i.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
       (i.customer?.fullName && i.customer.fullName.toLowerCase().includes(search.toLowerCase()))
   );
-
-  const getBadgeVariant = (status: string): "success" | "warning" | "error" | "info" | "default" => {
-    switch (status) {
-      case "paid":
-        return "success";
-      case "pending":
-        return "info";
-      case "partial":
-        return "warning";
-      case "overdue":
-        return "error";
-      case "cancelled":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
-  const formatCurrency = (amount: string | number) => {
-    const numAmount = typeof amount === "string" ? Number(amount) : amount;
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: CURRENCY.code,
-      minimumFractionDigits: 0,
-    }).format(numAmount);
-  };
 
   const onCreateInvoice = async (data: CreateInvoiceFormValues) => {
     setCreating(true);
@@ -132,7 +109,7 @@ export default function InvoicesPage() {
         addToast({
           type: "success",
           title: "Invoice created",
-          message: `Invoice ${data.invoiceNumber} has been created.`,
+          message: `Invoice ${data.invoiceNumber} has been created successfully.`,
         });
         setShowCreateModal(false);
         reset();
@@ -144,11 +121,11 @@ export default function InvoicesPage() {
           message: response.message || "An error occurred.",
         });
       }
-    } catch {
+    } catch (err) {
       addToast({
         type: "error",
         title: "Error",
-        message: "Unable to create invoice. Please try again.",
+        message: getErrorMessage(err),
       });
     } finally {
       setCreating(false);
@@ -163,7 +140,7 @@ export default function InvoicesPage() {
         addToast({
           type: "success",
           title: "Virtual account generated",
-          message: `Account: ${response.data.nombaAccountNumber} (${response.data.bankName})`,
+          message: `${response.data.bankName}: ${response.data.nombaAccountNumber}`,
         });
         fetchInvoices();
       } else {
@@ -173,11 +150,12 @@ export default function InvoicesPage() {
           message: response.message || "An error occurred.",
         });
       }
-    } catch {
+    } catch (err) {
+      // Show the EXACT backend error message
       addToast({
         type: "error",
-        title: "Error",
-        message: "Unable to generate virtual account. Please try again.",
+        title: "Virtual account generation failed",
+        message: getErrorMessage(err),
       });
     } finally {
       setGeneratingVA(false);
@@ -185,32 +163,47 @@ export default function InvoicesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Invoices
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Track and manage all your invoices
-          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Invoices</h1>
+            {!loading && !error && (
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                {invoices.length} total
+              </span>
+            )}
+          </div>
+          <p className="text-slate-500">Track and manage all your invoices with virtual accounts</p>
         </div>
-        <Button icon={<Plus size={18} />} onClick={() => setShowCreateModal(true)}>
-          Create Invoice
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            icon={<RefreshCw size={16} />}
+            onClick={fetchInvoices}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+          <Button icon={<Plus size={18} />} onClick={() => setShowCreateModal(true)}>
+            Create Invoice
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
       <div className="max-w-sm">
         <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             type="search"
-            placeholder="Search invoices..."
+            placeholder="Search invoices by number, customer, or description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -219,17 +212,16 @@ export default function InvoicesPage() {
       </div>
 
       {/* Content */}
-      <Card>
+      <Card padding="none">
         {loading ? (
-          <div className="space-y-4">
-            <LoadingSkeleton height="2rem" width="100%" />
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRowSkeleton key={i} />
-            ))}
+          <div className="p-6">
+            <TableSkeleton rows={5} columns={6} />
           </div>
         ) : error ? (
-          <div className="p-8 text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="p-12 text-center">
+            <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Failed to load invoices</h3>
+            <p className="text-slate-500 mb-6">{error}</p>
             <Button variant="outline" onClick={fetchInvoices}>
               Try Again
             </Button>
@@ -241,90 +233,93 @@ export default function InvoicesPage() {
             description={
               search
                 ? "Try adjusting your search query"
-                : "Create your first invoice to get started"
+                : "Create your first invoice to start accepting payments with virtual accounts"
             }
             actionLabel={search ? undefined : "Create Invoice"}
             onAction={() => setShowCreateModal(true)}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableCell header>Invoice</TableCell>
-              <TableCell header>Customer</TableCell>
-              <TableCell header>Amount</TableCell>
-              <TableCell header>Due Date</TableCell>
-              <TableCell header>Virtual Account</TableCell>
-              <TableCell header>Status</TableCell>
-            </TableHeader>
-            <TableBody>
-              {filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>
-                    <Link 
-                      href={`/dashboard/invoices/${invoice.id}`}
-                      className="group flex items-center gap-2 hover:text-teal-700 transition-colors"
-                    >
-                      <div>
-                        <p className="font-medium text-slate-900 group-hover:text-teal-700 transition-colors">
-                          {invoice.description}
-                        </p>
-                        <p className="text-xs text-slate-500 font-mono">
-                          #{invoice.invoiceNumber}
-                        </p>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableCell header>Invoice</TableCell>
+                <TableCell header>Customer</TableCell>
+                <TableCell header>Amount</TableCell>
+                <TableCell header>Due Date</TableCell>
+                <TableCell header>Virtual Account</TableCell>
+                <TableCell header>Status</TableCell>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>
+                      <Link
+                        href={`/dashboard/invoices/${invoice.id}`}
+                        className="group flex items-center gap-2"
+                      >
+                        <div>
+                          <p className="font-medium text-slate-900 group-hover:text-teal-700 transition-colors">
+                            {invoice.description}
+                          </p>
+                          <p className="text-xs text-slate-500 font-mono">
+                            #{invoice.invoiceNumber}
+                          </p>
+                        </div>
+                        <ExternalLink size={14} className="text-slate-300 group-hover:text-teal-600 transition-colors shrink-0" />
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-100 to-teal-50 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold text-teal-700">
+                            {invoice.customer?.fullName?.charAt(0) || "?"}
+                          </span>
+                        </div>
+                        <span className="text-sm">{invoice.customer?.fullName || "N/A"}</span>
                       </div>
-                      <ExternalLink size={14} className="text-slate-400 group-hover:text-teal-600" />
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User size={14} className="text-slate-400" />
-                      {invoice.customer?.fullName || "N/A"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
+                    </TableCell>
+                    <TableCell>
                       <p className="font-semibold text-slate-900">
                         {formatCurrency(invoice.expectedAmount)}
                       </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-slate-400" />
-                      {new Date(invoice.dueDate).toLocaleDateString("en-NG")}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {invoice.virtualAccount ? (
-                      <div>
-                        <p className="font-mono text-sm">
-                          {invoice.virtualAccount.nombaAccountNumber}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {invoice.virtualAccount.bankName}
-                        </p>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Calendar size={14} className="text-slate-400" />
+                        {formatDate(invoice.dueDate)}
                       </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        icon={<CreditCard size={14} />}
-                        onClick={() => handleGenerateVirtualAccount(invoice)}
-                        disabled={generatingVA}
-                      >
-                        Generate VA
-                      </Button>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getBadgeVariant(invoice.status)}>
-                      {INVOICE_STATUS_LABELS[invoice.status] || invoice.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                    <TableCell>
+                      {invoice.virtualAccount ? (
+                        <div>
+                          <p className="font-mono text-sm font-medium text-slate-900">
+                            {invoice.virtualAccount.nombaAccountNumber}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {invoice.virtualAccount.bankName}
+                          </p>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          icon={<CreditCard size={14} />}
+                          onClick={() => handleGenerateVirtualAccount(invoice)}
+                          disabled={generatingVA}
+                          loading={generatingVA}
+                        >
+                          Generate VA
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={invoice.status} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </Card>
 
@@ -337,14 +332,12 @@ export default function InvoicesPage() {
         }}
         title="Create New Invoice"
       >
-        <form onSubmit={handleSubmit(onCreateInvoice)} className="space-y-4">
+        <form onSubmit={handleSubmit(onCreateInvoice)} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Customer
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Customer</label>
             <select
               {...register("customerId")}
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-700 focus:border-transparent"
+              className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-shadow"
             >
               <option value="">Select a customer</option>
               {customers.map((c) => (
@@ -366,7 +359,7 @@ export default function InvoicesPage() {
           />
 
           <Input
-            label="Amount (NGN)"
+            label={`Amount (${CURRENCY.code})`}
             type="number"
             placeholder="50000"
             error={errors.expectedAmount?.message}
@@ -388,22 +381,15 @@ export default function InvoicesPage() {
           />
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setShowCreateModal(false);
-                reset();
-              }}
-            >
+            <Button type="button" variant="outline" onClick={() => { setShowCreateModal(false); reset(); }}>
               Cancel
             </Button>
-            <Button type="submit" disabled={creating}>
+            <Button type="submit" loading={creating}>
               {creating ? "Creating..." : "Create Invoice"}
             </Button>
           </div>
         </form>
       </Modal>
-    </div>
+    </motion.div>
   );
 }

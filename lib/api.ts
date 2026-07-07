@@ -18,8 +18,6 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // In the future, attach JWT token here
-    // const token = localStorage.getItem("auth_token");
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
@@ -28,22 +26,44 @@ apiClient.interceptors.request.use(
 // Response interceptor - handle errors globally
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  (error: AxiosError<{ message?: string; error?: string }>) => {
     if (error.response) {
-      const { status } = error.response;
+      const { status, data } = error.response;
       if (status === 401) {
-        // Handle unauthorized (redirect to login, etc.)
         console.warn("[API] Unauthorized request");
       }
       if (status === 500) {
         console.error("[API] Server error");
       }
+      // Add the backend message to the error object for easy access
+      const backendMessage = data?.message || data?.error || error.message;
+      (error as AxiosError & { backendMessage?: string }).backendMessage = backendMessage;
     } else if (error.request) {
       console.error("[API] Network error - no response received");
+      (error as AxiosError & { backendMessage?: string }).backendMessage =
+        "Unable to connect to the server. Please check your internet connection.";
     }
     return Promise.reject(error);
   }
 );
+
+// Helper to extract backend error message
+export function getErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "backendMessage" in error) {
+    return (error as { backendMessage: string }).backendMessage;
+  }
+  if (error instanceof AxiosError) {
+    const data = error.response?.data;
+    if (data && typeof data === "object") {
+      return (data as { message?: string; error?: string }).message ||
+             (data as { error?: string }).error ||
+             "An unexpected error occurred";
+    }
+    if (error.message) return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return "An unexpected error occurred";
+}
 
 // --- Helper functions ---
 
