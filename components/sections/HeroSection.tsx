@@ -39,7 +39,7 @@ export function HeroSection() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <Link href="/auth/register">
-              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 shadow-xl shadow-white/10 w-full sm:w-auto text-base px-8">
+              <Button size="lg" className="bg-slate-100 shadow-xl shadow-white/10 w-full sm:w-auto text-base px-8">
                 Start Free Trial
                 <ArrowRight size={20} className="ml-2" />
               </Button>

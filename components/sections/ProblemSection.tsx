@@ -10,6 +10,10 @@ import {
   Users,
   Split,
   Copy,
+  Frown,
+  Clock,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 export function ProblemSection() {
@@ -155,29 +159,32 @@ export function ProblemSection() {
               
               {/* Floating cards */}
               <div className="relative grid grid-cols-2 gap-4 h-full">
-                {[
-                  { icon: "😫", label: "Stress", color: "from-red-50 to-slate-50" },
-                  { icon: "⏰", label: "Time Waste", color: "from-orange-50 to-slate-50" },
-                  { icon: "😤", label: "Frustration", color: "from-yellow-50 to-slate-50" },
-                  { icon: "❌", label: "Errors", color: "from-red-50 to-slate-50" },
-                ].map((item, i) => (
-                  <motion.div
-                    key={item.label}
-                    animate={{ 
-                      y: [0, -15, 0],
-                      rotate: [0, 2, -2, 0]
-                    }}
-                    transition={{
-                      duration: 4 + i * 0.5,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 flex flex-col items-center justify-center gap-3"
-                  >
-                    <span className="text-5xl">{item.icon}</span>
-                    <p className="font-semibold text-slate-900">{item.label}</p>
-                  </motion.div>
-                ))}
+              {[
+                  { icon: Frown, label: "Stress", color: "from-red-50 to-slate-50" },
+                  { icon: Clock, label: "Time Waste", color: "from-orange-50 to-slate-50" },
+                  { icon: AlertTriangle, label: "Frustration", color: "from-yellow-50 to-slate-50" },
+                  { icon: XCircle, label: "Errors", color: "from-red-50 to-slate-50" },
+                ].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.div
+                      key={item.label}
+                      animate={{ 
+                        y: [0, -15, 0],
+                        rotate: [0, 2, -2, 0]
+                      }}
+                      transition={{
+                        duration: 4 + i * 0.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="bg-white rounded-2xl p-6 shadow-xl border border-slate-200 flex flex-col items-center justify-center gap-3"
+                    >
+                      <Icon size={48} className="text-slate-700" />
+                      <p className="font-semibold text-slate-900">{item.label}</p>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
