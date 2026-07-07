@@ -1,14 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": ".next"
-      }
-    }
-  ],
+  "buildCommand": "next build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "routes": [
     {
       "src": "/(.*)",
