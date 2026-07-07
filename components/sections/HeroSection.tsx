@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Card } from "@/components/ui/Card";
-import { ArrowRight, Github, Play } from "lucide-react";
+import { ArrowRight, Github, Star, Zap } from "lucide-react";
 
 export function HeroSection() {
   const containerVariants = {
@@ -40,18 +41,6 @@ export function HeroSection() {
     }),
   };
 
-  const cardFloatVariants = {
-    initial: { y: 0 },
-    animate: {
-      y: [0, -10, 0],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    },
-  };
-
   return (
     <section
       id="home"
@@ -84,12 +73,12 @@ export function HeroSection() {
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-slate-900 tracking-tight">
                 Stop Guessing Who Paid.
                 <br />
-                <span className="gradient-text">
+                <span className="gradient-text-hero">
                   Automatically Match Every Bank Transfer.
                 </span>
               </h1>
 
-              <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-lg">
+              <p className="text-lg md:text-xl text-slate-500 leading-relaxed max-w-lg">
                 PayMatch helps businesses automatically match customer bank transfer
                 payments to the correct invoices using Nomba Virtual Accounts.
                 Save time, reduce errors, and get paid faster.
@@ -100,13 +89,15 @@ export function HeroSection() {
               variants={itemVariants}
               className="flex flex-col sm:flex-row gap-4"
             >
-              <Button
-                size="lg"
-                icon={<ArrowRight size={20} />}
-                className="w-full sm:w-auto shadow-lg shadow-teal-700/20"
-              >
-                Start Free Trial
-              </Button>
+              <Link href="/auth/register">
+                <Button
+                  size="lg"
+                  icon={<ArrowRight size={20} />}
+                  className="w-full sm:w-auto shadow-lg shadow-teal-700/20 hover:shadow-teal-700/30"
+                >
+                  Start Free Trial
+                </Button>
+              </Link>
               <a
                 href="https://github.com/paymatch"
                 target="_blank"
@@ -132,7 +123,7 @@ export function HeroSection() {
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 border-2 border-white flex items-center justify-center text-white text-xs font-medium"
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 border-2 border-white flex items-center justify-center text-white text-xs font-medium shadow-sm"
                   >
                     {String.fromCharCode(64 + i)}
                   </div>
@@ -144,15 +135,13 @@ export function HeroSection() {
                 </p>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <svg
+                    <Star
                       key={i}
-                      className="w-4 h-4 text-yellow-400 fill-current"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
+                      size={16}
+                      className="fill-yellow-400 text-yellow-400"
+                    />
                   ))}
-                  <span className="text-sm text-slate-600 ml-1">5.0</span>
+                  <span className="text-sm text-slate-500 ml-1">5.0</span>
                 </div>
               </div>
             </motion.div>
@@ -168,21 +157,30 @@ export function HeroSection() {
             <div className="relative min-h-[24rem] md:min-h-[28rem] lg:min-h-[32rem]">
               {/* Main Dashboard Card */}
               <motion.div
-                variants={cardFloatVariants}
-                initial="initial"
-                animate="animate"
+                animate={{
+                  y: [0, -8, 0],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="absolute inset-0 -top-4"
               >
                 <Card
                   blur={false}
+                  glow
                   className="h-full shadow-2xl shadow-teal-700/20 border-2"
                 >
                   <div className="space-y-6 p-6">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-slate-900">
-                        Dashboard
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Zap size={18} className="text-teal-700" />
+                        <h3 className="text-lg font-bold text-slate-900">
+                          Dashboard
+                        </h3>
+                      </div>
                       <div className="flex gap-2">
                         <div className="w-3 h-3 bg-teal-700 rounded-full"></div>
                         <div className="w-3 h-3 bg-slate-300 rounded-full"></div>
@@ -204,9 +202,9 @@ export function HeroSection() {
                           variants={floatingVariants}
                           initial="hidden"
                           animate="visible"
-                          className={`bg-gradient-to-br ${metric.color} rounded-lg p-3 border ${metric.border}`}
+                          className={`bg-gradient-to-br ${metric.color} rounded-xl p-3 border ${metric.border}`}
                         >
-                          <p className="text-xs text-slate-600 mb-1">
+                          <p className="text-xs text-slate-500 mb-1">
                             {metric.label}
                           </p>
                           <p className={`text-2xl font-bold ${metric.textColor}`}>
@@ -218,7 +216,7 @@ export function HeroSection() {
 
                     {/* Recent Transactions */}
                     <div className="space-y-3 border-t border-slate-200 pt-4">
-                      <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Recent Transactions
                       </p>
                       <div className="space-y-2">
@@ -233,7 +231,7 @@ export function HeroSection() {
                             variants={floatingVariants}
                             initial="hidden"
                             animate="visible"
-                            className="flex items-center justify-between text-sm"
+                            className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-slate-50 transition-colors"
                           >
                             <span className="text-slate-600">
                               {tx.name}
@@ -242,7 +240,7 @@ export function HeroSection() {
                               <span className="font-semibold text-slate-900">
                                 {tx.amount}
                               </span>
-                              <span className={`px-2 py-0.5 ${tx.statusColor} text-xs font-medium rounded`}>
+                              <span className={`px-2 py-0.5 ${tx.statusColor} text-xs font-medium rounded-md`}>
                                 {tx.status}
                               </span>
                             </div>

@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { StatusBadge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/Table";
-import { LoadingSkeleton, TableRowSkeleton } from "@/components/ui/LoadingSkeleton";
+import { TableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { paymentsService } from "@/services";
-import { Payment } from "@/types";
-import { DollarSign, RefreshCw, ExternalLink, Share2, Mail, TrendingUp, Filter } from "lucide-react";
-import { CURRENCY, PAYMENT_STATUS_LABELS } from "@/constants";
+import type { Payment } from "@/types";
+import { DollarSign, RefreshCw, Filter, ArrowRight, AlertCircle, CheckCircle2, Clock, XCircle, RotateCcw } from "lucide-react";
+import { CURRENCY } from "@/constants";
 import { useToast } from "@/components/ui/Toast";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/api";
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -31,8 +34,8 @@ export default function PaymentsPage() {
       } else {
         setError(response.message || "Failed to load payments");
       }
-    } catch {
-      setError("Unable to connect to the backend. Please check your connection.");
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -40,49 +43,52 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const filteredPayments = statusFilter === "all" ? payments : payments.filter(p => p.status === statusFilter);
 
-  const getBadgeVariant = (status: string): "success" | "warning" | "error" | "info" | "default" => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "pending":
-        return "warning";
-      case "failed":
-        return "error";
-      case "refunded":
-        return "info";
-      default:
-        return "default";
-    }
+  const statusCounts = {
+    all: payments.length,
+    completed: payments.filter(p => p.status === "completed").length,
+    pending: payments.filter(p => p.status === "pending").length,
+    failed: payments.filter(p => p.status === "failed").length,
+    refunded: payments.filter(p => p.status === "refunded").length,
   };
 
-  const formatCurrency = (amount: string | number) => {
-    const numAmount = typeof amount === "string" ? Number(amount) : amount;
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: CURRENCY.code,
-      minimumFractionDigits: 0,
-    }).format(numAmount);
-  };
+  const totalRevenue = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const filterTabs = [
+    { key: "all", label: "All", count: statusCounts.all },
+    { key: "completed", label: "Completed", count: statusCounts.completed, icon: CheckCircle2, color: "text-emerald-600" },
+    { key: "pending", label: "Pending", count: statusCounts.pending, icon: Clock, color: "text-amber-600" },
+    { key: "failed", label: "Failed", count: statusCounts.failed, icon: XCircle, color: "text-red-600" },
+    { key: "refunded", label: "Refunded", count: statusCounts.refunded, icon: RotateCcw, color: "text-blue-600" },
+  ];
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-            Payments
-          </h1>
-          <p className="text-slate-600 mt-1">
-            View and manage all payment transactions
-          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Payments</h1>
+            {!loading && !error && (
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                {payments.length} total
+              </span>
+            )}
+          </div>
+          <p className="text-slate-500">View and manage all payment transactions</p>
         </div>
         <Button
           variant="outline"
-          icon={<RefreshCw size={18} />}
+          icon={<RefreshCw size={16} />}
           onClick={fetchPayments}
           disabled={loading}
         >
@@ -92,69 +98,77 @@ export default function PaymentsPage() {
 
       {/* Stats */}
       {!loading && !error && payments.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <p className="text-sm text-slate-600 mb-1">Total Payments</p>
-            <p className="text-2xl font-bold text-slate-900">{payments.length}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          <Card padding="sm">
+            <div className="p-3">
+              <p className="text-xs text-slate-500 font-medium mb-1">Total Payments</p>
+              <p className="text-2xl font-bold text-slate-900">{payments.length}</p>
+            </div>
           </Card>
-          <Card className="p-4">
-            <p className="text-sm text-slate-600 mb-1">Completed</p>
-            <p className="text-2xl font-bold text-green-700">
-              {payments.filter(p => p.status === "completed").length}
-            </p>
+          <Card padding="sm">
+            <div className="p-3">
+              <p className="text-xs text-emerald-600 font-medium mb-1">Completed</p>
+              <p className="text-2xl font-bold text-emerald-700">{statusCounts.completed}</p>
+            </div>
           </Card>
-          <Card className="p-4">
-            <p className="text-sm text-slate-600 mb-1">Pending</p>
-            <p className="text-2xl font-bold text-amber-700">
-              {payments.filter(p => p.status === "pending").length}
-            </p>
+          <Card padding="sm">
+            <div className="p-3">
+              <p className="text-xs text-amber-600 font-medium mb-1">Pending</p>
+              <p className="text-2xl font-bold text-amber-700">{statusCounts.pending}</p>
+            </div>
           </Card>
-          <Card className="p-4">
-            <p className="text-sm text-slate-600 mb-1">Total Revenue</p>
-            <p className="text-2xl font-bold text-teal-700">
-              {formatCurrency(payments.reduce((sum, p) => sum + Number(p.amount), 0))}
-            </p>
+          <Card padding="sm">
+            <div className="p-3">
+              <p className="text-xs text-teal-600 font-medium mb-1">Total Revenue</p>
+              <p className="text-2xl font-bold text-teal-700">{formatCurrency(totalRevenue)}</p>
+            </div>
           </Card>
+        </motion.div>
+      )}
+
+      {/* Filter Tabs */}
+      {!loading && !error && payments.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          {filterTabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  statusFilter === tab.key
+                    ? "bg-teal-700 text-white shadow-lg shadow-teal-700/20"
+                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                }`}
+              >
+                {Icon && <Icon size={16} className={statusFilter === tab.key ? "text-white" : tab.color} />}
+                <span>{tab.label}</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-xs ${
+                  statusFilter === tab.key ? "bg-teal-600" : "bg-slate-100"
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Filters */}
-      {!loading && !error && payments.length > 0 && (
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <Filter size={18} className="text-slate-600" />
-            <span className="text-sm font-medium text-slate-700">Filter by status:</span>
-            <div className="flex gap-2 flex-wrap">
-              {["all", "completed", "pending", "failed", "refunded"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === status
-                      ? "bg-teal-700 text-white"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Content */}
-      <Card>
+      <Card padding="none">
         {loading ? (
-          <div className="space-y-4">
-            <LoadingSkeleton height="2rem" width="100%" />
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRowSkeleton key={i} />
-            ))}
+          <div className="p-6">
+            <TableSkeleton rows={5} columns={5} />
           </div>
         ) : error ? (
-          <div className="p-8 text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="p-12 text-center">
+            <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Failed to load payments</h3>
+            <p className="text-slate-500 mb-6">{error}</p>
             <Button variant="outline" onClick={fetchPayments}>
               Try Again
             </Button>
@@ -166,59 +180,55 @@ export default function PaymentsPage() {
             description={
               statusFilter === "all"
                 ? "Payments will appear here once customers start paying to their virtual accounts"
-                : "Try adjusting your filter"
+                : "Try adjusting your filter to see more payments"
             }
-            actionLabel={statusFilter === "all" ? undefined : "Clear Filter"}
+            actionLabel={statusFilter !== "all" ? "Clear Filter" : undefined}
             onAction={() => setStatusFilter("all")}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableCell header>Reference</TableCell>
-              <TableCell header>Amount</TableCell>
-              <TableCell header>Method</TableCell>
-              <TableCell header>Status</TableCell>
-              <TableCell header>Date</TableCell>
-            </TableHeader>
-            <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell>
-                    <span className="font-mono text-sm">
-                      {payment.merchantTxRef}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        {formatCurrency(payment.amount)}
-                      </p>
-                      <p className="text-xs text-slate-500">{payment.currency}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="capitalize">{payment.paymentMethod}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getBadgeVariant(payment.status)}>
-                      {PAYMENT_STATUS_LABELS[payment.status] || payment.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-slate-600">
-                      {new Date(payment.createdAt).toLocaleDateString("en-NG", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableCell header>Reference</TableCell>
+                <TableCell header>Amount</TableCell>
+                <TableCell header>Method</TableCell>
+                <TableCell header>Status</TableCell>
+                <TableCell header>Date</TableCell>
+              </TableHeader>
+              <TableBody>
+                {filteredPayments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell>
+                      <span className="font-mono text-sm font-medium text-slate-900">
+                        {payment.merchantTxRef}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          {formatCurrency(payment.amount)}
+                        </p>
+                        <p className="text-xs text-slate-500">{payment.currency}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="capitalize text-sm">{payment.paymentMethod}</span>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={payment.status} />
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-slate-600">
+                        {formatDate(payment.createdAt)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </Card>
-    </div>
+    </motion.div>
   );
 }

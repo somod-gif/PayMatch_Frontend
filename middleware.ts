@@ -29,7 +29,7 @@ export function middleware(request: NextRequest) {
   }
 
   // If accessing auth routes with a userId, redirect to dashboard
-  if (pathname.startsWith("/auth") && userId) {
+  if ((pathname.startsWith("/auth") || pathname === "/") && userId) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
