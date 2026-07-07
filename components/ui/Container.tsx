@@ -9,16 +9,20 @@ interface ContainerProps {
   size?: "sm" | "md" | "lg";
 }
 
-export function Container({ children, className, size = "lg" }: ContainerProps) {
-  const sizes = {
-    sm: "max-w-2xl",
-    md: "max-w-4xl",
-    lg: "max-w-6xl",
-  };
+const sizeStyles = {
+  sm: "max-w-2xl",
+  md: "max-w-4xl",
+  lg: "max-w-7xl",
+};
 
+export function Container({ children, className, size = "lg" }: ContainerProps) {
   return (
     <div
-      className={cn("w-full mx-auto px-4 md:px-8", sizes[size], className)}
+      className={cn(
+        "mx-auto px-4 sm:px-6 lg:px-8",
+        sizeStyles[size],
+        className
+      )}
     >
       {children}
     </div>
